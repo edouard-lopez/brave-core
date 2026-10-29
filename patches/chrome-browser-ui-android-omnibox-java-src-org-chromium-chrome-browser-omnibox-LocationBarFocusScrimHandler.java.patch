@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/LocationBarFocusScrimHandler.java b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/LocationBarFocusScrimHandler.java
-index 24fa3dccf8fcd82d2167591f852da7d7a0d77924..867b3e1d166379ad3e92d8c1bc8071872581c379 100644
+index aea1bb8d4d04ba2bf0fb3cc8902efc8401294986..52c7ad2632c5b3bb99d8bd8c1baedb3980360c23 100644
 --- a/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/LocationBarFocusScrimHandler.java
 +++ b/chrome/browser/ui/android/omnibox/java/src/org/chromium/chrome/browser/omnibox/LocationBarFocusScrimHandler.java
-@@ -73,7 +73,6 @@ public class LocationBarFocusScrimHandler {
+@@ -72,7 +72,6 @@ public class LocationBarFocusScrimHandler {
      private final Context mContext;
      private final NonNullObservableSupplier<Integer> mTabStripHeightSupplier;
      private final Callback<Integer> mTabStripHeightChangeCallback;
@@ -13,7 +13,7 @@ index 24fa3dccf8fcd82d2167591f852da7d7a0d77924..867b3e1d166379ad3e92d8c1bc807187
 @@ -99,7 +98,6 @@ public class LocationBarFocusScrimHandler {
              BottomControlsStacker bottomControlsStacker) {
          mScrimManager = scrimManager;
-         mLocationBarDataProvider = locationBarDataProvider;
+         mResourceProvider = resourceProvider;
 -        mBottomControlsStacker = bottomControlsStacker;
          mContext = context;
          Callback<Boolean> visibilityChangeCallbackWrapper =
@@ -26,7 +26,7 @@ index 24fa3dccf8fcd82d2167591f852da7d7a0d77924..867b3e1d166379ad3e92d8c1bc807187
      }
  
      /** Compute and apply property updates needed for accurate visual representation of scrim. */
-@@ -160,11 +159,7 @@ public class LocationBarFocusScrimHandler {
+@@ -156,11 +155,7 @@ public class LocationBarFocusScrimHandler {
          // the toolbar at the top, the bottom inset is covered by the keyboard or the suggestions
          // list, and cropping the scrim would only reveal an unscrimmed band above the keyboard
          // when the scrim's container is resized to end at the keyboard.
