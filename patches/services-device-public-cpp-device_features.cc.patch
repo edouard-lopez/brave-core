@@ -1,5 +1,5 @@
 diff --git a/services/device/public/cpp/device_features.cc b/services/device/public/cpp/device_features.cc
-index 8749946eeeafb63d38e512243aeac0a78e9d6807..1e94c57b4dd5285269c7d3c7f63429aee95eff0e 100644
+index 9f37edc639bef9293c66a1643cf2e2b4e1c09cec..1e94c57b4dd5285269c7d3c7f63429aee95eff0e 100644
 --- a/services/device/public/cpp/device_features.cc
 +++ b/services/device/public/cpp/device_features.cc
 @@ -18,8 +18,8 @@ namespace features {
@@ -13,15 +13,6 @@ index 8749946eeeafb63d38e512243aeac0a78e9d6807..1e94c57b4dd5285269c7d3c7f63429ae
  
  // Enables browser-side privacy mitigations for generic sensors.
  BASE_FEATURE(kSensorPrivacyMitigations, base::FEATURE_ENABLED_BY_DEFAULT);
-@@ -72,7 +72,7 @@ BASE_FEATURE(kWebUsbHardenEndpointAliasing, base::FEATURE_ENABLED_BY_DEFAULT);
- // 0 (unconfigured) and clears claimed interfaces, endpoints, and detached
- // interface state.
- BASE_FEATURE(kWebUsbResetInvalidatesConfiguration,
--             base::FEATURE_ENABLED_BY_DEFAULT);
-+             base::FEATURE_DISABLED_BY_DEFAULT);
- 
- // When enabled, accessing the navigator.hid attribute does not prevent the
- // frame from entering the back forward cache.
 @@ -115,9 +115,9 @@ BASE_FEATURE(kSerialUsbDisplayNameWin, base::FEATURE_ENABLED_BY_DEFAULT);
  // the operating system's location API or our network-based provider
  // as the source of location data for Geolocation API.

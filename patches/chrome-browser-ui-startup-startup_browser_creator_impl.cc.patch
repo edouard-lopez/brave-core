@@ -1,9 +1,9 @@
 diff --git a/chrome/browser/ui/startup/startup_browser_creator_impl.cc b/chrome/browser/ui/startup/startup_browser_creator_impl.cc
-index 1d9b0f07e883f37e68a5eaeff146b0ce4285ab58..e1dc3c5747ed9d2e6e60eb46a19210a4ce65aab5 100644
+index 7fc9d33c6c51ef1014d16182f22b9759293ba75b..879966eac22eb6b3ea93681efeb5b7ff42ed5379 100644
 --- a/chrome/browser/ui/startup/startup_browser_creator_impl.cc
 +++ b/chrome/browser/ui/startup/startup_browser_creator_impl.cc
-@@ -426,6 +426,7 @@ BrowserWindowInterface* StartupBrowserCreatorImpl::OpenTabsInBrowser(
-       params.disposition = WindowOpenDisposition::kCurrentTab;
+@@ -425,6 +425,7 @@ BrowserWindowInterface* StartupBrowserCreatorImpl::OpenTabsInBrowser(
+       params.disposition = ui::mojom::WindowOpenDisposition::kCurrentTab;
        params.tabstrip_add_types = ADD_NONE;
        first_tab = false;
 +      BraveModifyStartupTabNavigationParams(tab, browser, params);
