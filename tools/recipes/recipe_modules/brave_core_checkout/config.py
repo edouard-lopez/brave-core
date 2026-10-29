@@ -48,5 +48,9 @@ def asan(c):
 def brave(c):
     # The configuration of a brave-core checkout. `BASE` applies underneath; the
     # defaults to share between builds belong here.
+    #
+    # Every `pnpm run init`/`sync` reads it, the recipe's and those a run makes
+    # later alike.
+    c.dotenv['lean_sync'] = 'true'
     if c.USE_REMOTEEXEC:
         rbe(c)
