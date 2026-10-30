@@ -111,10 +111,12 @@ Each sweep targets one way Brave gets exposed, and has its rules in
 `rules/<sweep>/`. They're independent, so give each sweep to a subagent, with
 the ground rules, its rule files and their `.candidates`. An incremental range
 of a few hundred commits has short lists: sweeps can share a subagent (M159,
-8138.1..8139.2, 198 commits: four subagents for the nine sweeps). For each rule,
-it reads the file, then checks the candidates as "How to check" says. Rules
-sharing a list say so ("Same as …"); read it once. A list that says "read the
-whole range" belongs to a rule with no patterns.
+8138.1..8139.2, 198 commits: four subagents for the nine sweeps), and a range
+that is only the `chrome/VERSION` bump needs none (M159, 8140.0..8140.1: every
+list empty for the range). For each rule, it reads the file, then checks the
+candidates as "How to check" says. Rules sharing a list say so ("Same as …");
+read it once. A list that says "read the whole range" belongs to a rule with no
+patterns.
 
 Ask each subagent for method notes (which rules found verified items, which
 lists were noise, and any tooling problem it hit), and for the hashes of the
