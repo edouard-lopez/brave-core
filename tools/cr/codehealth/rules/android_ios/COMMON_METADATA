@@ -29,8 +29,8 @@ agentic_review {
     exclude_path_expression: ".*(?:about_flags\\.cc|flag-metadata\\.json)"
     # A flip removes the old default and adds the new one; a deletion only
     # removes.
-    content_patterns: "^-.*(?:CachedFlag\\(|newMutableFlagWithSafeDefault|FEATURE_(?:EN|DIS)ABLED_BY_DEFAULT)"
-    required_patterns: "^\\+.*(?:CachedFlag\\(|newMutableFlagWithSafeDefault|FEATURE_(?:EN|DIS)ABLED_BY_DEFAULT)"
+    content_patterns: "^-.*(?:CachedFlag\\(|newMutableFlagWithSafeDefault|newFlag\\(.*FeatureState\\.|FEATURE_(?:EN|DIS)ABLED_BY_DEFAULT)"
+    required_patterns: "^\\+.*(?:CachedFlag\\(|newMutableFlagWithSafeDefault|newFlag\\(.*FeatureState\\.|FEATURE_(?:EN|DIS)ABLED_BY_DEFAULT)"
     rules: "tools/cr/codehealth/rules/android_ios/default-flips-to-new-ui-class.md"
   }
   capability_groups {

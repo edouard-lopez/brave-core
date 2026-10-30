@@ -11,6 +11,13 @@ agentic_review {
     rules: "tools/cr/codehealth/rules/defaults/feature-defaults-unittest-entries.md"
     rules: "tools/cr/codehealth/rules/defaults/pins-equal-to-upstream-default.md"
   }
+  # New IPHs that ship enabled: Brave pins IPHs one by one, and a new feature
+  # only adds a default, which the flips group above requires to be removed too.
+  capability_groups {
+    path_expression: "components/feature_engagement/public/feature_constants\\.cc"
+    content_patterns: "^\\+.*FEATURE_ENABLED_BY_DEFAULT"
+    rules: "tools/cr/codehealth/rules/defaults/feature-flips.md"
+  }
   # Moves to TabFeatures and friends, by subject.
   capability_groups {
     subject_patterns: "(?i)\\b(?:TabFeatures|UnownedUserData|BrowserWindowFeatures|TabInterface)\\b"

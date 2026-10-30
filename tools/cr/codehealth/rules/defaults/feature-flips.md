@@ -37,3 +37,6 @@ list them for the privacy review.
   and `kReadAnythingOmniboxChip` adds a Reading mode chip next to Speedreader.
 - M158, 8127.2: `kContextualTasksSidePanel` became enabled on desktop inside an
   `#if`.
+- M159, 8140.0: the new `kIPHTabGroupsNonGroupFocusingFeature`, enabled from the
+  start, and Java `newFlag(..., FeatureState.ENABLED_IN_PROD)` for
+  `kPlatformAgnosticXGeo`.
