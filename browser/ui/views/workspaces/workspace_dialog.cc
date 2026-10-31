@@ -39,14 +39,13 @@ WorkspaceDialog::WorkspaceDialog(BrowserWindowInterface* browser,
   // The caller (WorkspacesBubbleController) owns the resulting Widget.
   SetOwnershipOfNewWidget(views::Widget::InitParams::CLIENT_OWNS_WIDGET);
   SetModalType(ui::mojom::ModalType::kWindow);
-  SetTitle(l10n_util::GetStringUTF16(
-      renaming ? IDS_WORKSPACE_SETTINGS_DIALOG_TITLE
-               : IDS_WORKSPACE_CREATE_DIALOG_TITLE));
-  SetButtonLabel(
-      ui::mojom::DialogButton::kOk,
-      l10n_util::GetStringUTF16(
-          renaming ? IDS_WORKSPACE_SETTINGS_DIALOG_SAVE_BUTTON
-                   : IDS_WORKSPACE_CREATE_DIALOG_CREATE_BUTTON));
+  SetTitle(l10n_util::GetStringUTF16(renaming
+                                         ? IDS_WORKSPACE_SETTINGS_DIALOG_TITLE
+                                         : IDS_WORKSPACE_CREATE_DIALOG_TITLE));
+  SetButtonLabel(ui::mojom::DialogButton::kOk,
+                 l10n_util::GetStringUTF16(
+                     renaming ? IDS_WORKSPACE_SETTINGS_DIALOG_SAVE_BUTTON
+                              : IDS_WORKSPACE_CREATE_DIALOG_CREATE_BUTTON));
   SetButtonLabel(ui::mojom::DialogButton::kCancel,
                  l10n_util::GetStringUTF16(IDS_WORKSPACE_DIALOG_CANCEL_BUTTON));
 
@@ -62,18 +61,17 @@ WorkspaceDialog::WorkspaceDialog(BrowserWindowInterface* browser,
       l10n_util::GetStringUTF16(IDS_WORKSPACE_CREATE_DIALOG_NAME_LABEL)));
 
   // Renaming starts from the name the workspace already has.
-  auto* service = WorkspaceServiceFactory::GetForProfile(
-      browser_->GetProfile());
+  auto* service =
+      WorkspaceServiceFactory::GetForProfile(browser_->GetProfile());
   CHECK(service);
   std::optional<WorkspaceMetadata> existing =
       renaming ? service->GetWorkspace(*workspace_to_rename_) : std::nullopt;
 
   // Cache the initial name so OnAccept() does not need to read it from the
   // Textfield (which is destroyed before the delegate when the dialog closes).
-  workspace_name_ =
-      existing ? existing->name
-               : base::UTF16ToUTF8(l10n_util::GetStringUTF16(
-                     IDS_WORKSPACE_CREATE_DIALOG_DEFAULT_NAME));
+  workspace_name_ = existing ? existing->name
+                             : base::UTF16ToUTF8(l10n_util::GetStringUTF16(
+                                   IDS_WORKSPACE_CREATE_DIALOG_DEFAULT_NAME));
 
   auto textfield = std::make_unique<views::Textfield>();
   textfield->SetPlaceholderText(
@@ -104,9 +102,8 @@ void WorkspaceDialog::OnAccept() {
   service->CreateWorkspaceInWindow(workspace_name_, browser_);
 }
 
-void WorkspaceDialog::ContentsChanged(
-    views::Textfield* sender,
-    const std::u16string& new_contents) {
+void WorkspaceDialog::ContentsChanged(views::Textfield* sender,
+                                      const std::u16string& new_contents) {
   workspace_name_ = base::UTF16ToUTF8(new_contents);
   SetButtonEnabled(ui::mojom::DialogButton::kOk, !new_contents.empty());
 }

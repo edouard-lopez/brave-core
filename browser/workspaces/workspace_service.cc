@@ -23,6 +23,7 @@
 #include "base/uuid.h"
 #include "brave/browser/workspaces/workspace_session_utils.h"
 #include "brave/browser/workspaces/workspace_utils.h"
+#include "chrome/browser/lifetime/browser_close_manager.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser_tabstrip.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
@@ -399,6 +400,13 @@ bool WorkspaceService::HasNoVisibleWindowsExcept(
 bool WorkspaceService::InterceptWindowClose(BrowserWindowInterface* window) {
   // The closes issued by CloseAllWindowsInOrder must run normally.
   if (closing_all_windows_) {
+    return false;
+  }
+
+  // Quitting shuts the session services down before closing a single window,
+  // so the order windows close in no longer decides anything. Refusing a close
+  // here would only fight BrowserCloseManager as it walks the window list.
+  if (BrowserCloseManager::BrowserClosingStarted()) {
     return false;
   }
 

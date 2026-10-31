@@ -40,7 +40,7 @@ class Widget;
 // field's controller so the OK button is enabled only while a name has been
 // entered.
 class WorkspaceDialog : public views::DialogDelegate,
-                              public views::TextfieldController {
+                        public views::TextfieldController {
  public:
   // |browser| is the window the dialog acts on, and supplies the profile whose
   // workspace service is written to. It must outlive this dialog. Passing a
