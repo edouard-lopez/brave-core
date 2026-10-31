@@ -212,7 +212,6 @@ TEST(FeatureDefaultsTest, DisabledFeatures) {
       &features::kDevToolsUseGcaApi,
       &features::kDigitalGoodsApi,
       &features::kEmailVerificationProtocol,
-      &features::kEnterpriseReleaseNotes,
       &features::kFedCm,
       &features::kHttpsFirstBalancedMode,
       &features::kIndigo,
