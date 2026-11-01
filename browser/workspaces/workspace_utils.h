@@ -43,12 +43,17 @@ void WriteWorkspaceToDisk(
 // Reads the session-command binary via |backend| and returns the raw commands.
 // Only does file I/O — callers must deserialize the commands into
 // SessionWindow objects on the UI thread (SessionID::NewUnique() is
-// sequence-checked to the UI thread).  Returns an empty vector on error.
+// sequence-checked to the UI thread).
+//
+// Returns nullopt when the workspace could not be read, which is not the same
+// as a workspace that has nothing stored yet: a caller that treats a failed
+// read as "empty" will happily save an empty window back over whatever is on
+// disk.  An empty vector means the workspace is genuinely empty.
 //
 // Must run on a background sequenced task runner.
-std::vector<std::unique_ptr<sessions::SessionCommand>> ReadWorkspaceFromDisk(
-    const base::FilePath& workspace_path,
-    scoped_refptr<sessions::CommandStorageBackend> backend);
+std::optional<std::vector<std::unique_ptr<sessions::SessionCommand>>>
+ReadWorkspaceFromDisk(const base::FilePath& workspace_path,
+                      scoped_refptr<sessions::CommandStorageBackend> backend);
 
 // Parses one entry of the workspace metadata dict, whose key is the
 // workspace's UUID. Returns nullopt when |key| is not a UUID or |value| is not

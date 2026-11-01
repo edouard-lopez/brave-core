@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/memory/raw_ptr.h"
 #include "brave/browser/workspaces/workspace_metadata.h"
 #include "chrome/browser/ui/browser_tabrestore.h"
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
@@ -124,22 +125,27 @@ void RestoreWorkspaceIntoWindow(
   const sessions::SessionWindow& session_window = *windows.front();
   TabStripModel* tsm = window->GetTabStripModel();
 
-  // The saved tabs go after the window's placeholder tab, which is retired
-  // once they are in place.
-  const int placeholder_count = tsm->count();
-  const int base_index = placeholder_count;
+  // Remember the placeholder tabs by identity, not by index. A restored
+  // pinned tab is forced to the front of the strip by AddRestoredTab, so
+  // positions shift underneath us and an index would name the wrong tab.
+  std::vector<raw_ptr<content::WebContents>> placeholders;
+  for (int i = 0; i < tsm->count(); ++i) {
+    placeholders.push_back(tsm->GetWebContentsAt(i));
+  }
+  const int base_index = tsm->count();
 
   // We restore tabs ourselves rather than using RestoreForeignSessionWindows
   // because that API creates an empty new_group_ids map and never calls
   // RestoreTabGroupMetadata, so tab group names/colors are silently dropped.
   // By passing the original TabGroupId directly to AddRestoredTab, we avoid
   // any ID remapping and can apply visual data with the same IDs afterwards.
+  content::WebContents* tab_to_activate = nullptr;
   for (size_t i = 0; i < session_window.tabs.size(); ++i) {
     const auto& tab = session_window.tabs[i];
     if (tab->navigations.empty()) {
       continue;
     }
-    chrome::AddRestoredTab(
+    content::WebContents* restored = chrome::AddRestoredTab(
         window, tab->navigations,
         /*tab_index=*/base_index + static_cast<int>(i),
         tab->normalized_navigation_index(), tab->extension_app_id,
@@ -150,6 +156,9 @@ void RestoreWorkspaceIntoWindow(
         tab->extra_data,
         /*from_session_restore=*/true,
         /*is_active_browser=*/std::nullopt);
+    if (static_cast<int>(i) == session_window.selected_tab_index) {
+      tab_to_activate = restored;
+    }
   }
 
   // Apply group names, colors, and collapsed state.  Since we passed the
@@ -162,13 +171,19 @@ void RestoreWorkspaceIntoWindow(
     tsm->ChangeTabGroupVisuals(session_group->id, session_group->visual_data);
   }
 
-  const int active = base_index + session_window.selected_tab_index;
-  if (active >= base_index && active < tsm->count()) {
-    tsm->ActivateTabAt(active);
+  // Likewise activate by identity: tabs with no navigations are skipped and
+  // pinned ones move, so the saved index does not survive the restore.
+  if (tab_to_activate) {
+    const int active = tsm->GetIndexOfWebContents(tab_to_activate);
+    if (active != TabStripModel::kNoTab) {
+      tsm->ActivateTabAt(active);
+    }
   }
 
-  // Close back-to-front so earlier indices stay valid as tabs are removed.
-  for (int i = std::min(placeholder_count, tsm->count()) - 1; i >= 0; --i) {
-    tsm->CloseWebContentsAt(i, TabCloseTypes::CLOSE_NONE);
+  for (content::WebContents* placeholder : placeholders) {
+    const int index = tsm->GetIndexOfWebContents(placeholder);
+    if (index != TabStripModel::kNoTab) {
+      tsm->CloseWebContentsAt(index, TabCloseTypes::CLOSE_NONE);
+    }
   }
 }

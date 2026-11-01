@@ -104,10 +104,33 @@ void WorkspaceService::RemoveWorkspaceMetadata(const base::Uuid& id) {
 }
 
 void WorkspaceService::DeleteWorkspace(const base::Uuid& id) {
-  RemoveWorkspaceMetadata(id);
+  // A deleted workspace takes its window with it. Left behind, a put-away
+  // window would linger off screen with no row in any bubble to bring it
+  // back, holding the browser open.
   if (std::optional<SessionID> window_id = GetWindowForWorkspace(id)) {
+    BrowserWindowInterface* window =
+        BrowserWindowInterface::FromSessionID(*window_id);
+    // Unbinding first is what stops the close from saving the workspace back
+    // out through WillCloseAllTabs.
     UnbindWindow(*window_id);
+
+    const bool put_away = put_away_windows_.contains(*window_id);
+    const bool can_go_home = GetUnmanagedWindowFor(*window_id).has_value();
+    if (window && (put_away || can_go_home)) {
+      if (!put_away) {
+        // Someone is looking at this window, so send them home before it goes.
+        SwitchWindowToUnmanaged(window);
+      }
+      put_away_windows_.erase(*window_id);
+      UnloadController::From(window)->set_confirmed_to_close(true);
+      window->GetWindow()->Close();
+    }
+    // A window that is on screen with nowhere to go stays open as an ordinary
+    // unmanaged window: closing it would take away the only thing the person
+    // can see.
   }
+
+  RemoveWorkspaceMetadata(id);
   io_task_runner_->PostTask(FROM_HERE, base::BindOnce(
                                            [](base::FilePath dir) {
                                              if (base::PathExists(dir)) {
@@ -209,9 +232,10 @@ bool WorkspaceService::IsWorkspaceOnScreenElsewhere(const base::Uuid& id,
     return false;
   }
 
-  BrowserWindowInterface* host_window =
-      BrowserWindowInterface::FromSessionID(*host);
-  return host_window && host_window->GetWindow()->IsVisible();
+  // A window the person minimized still counts as theirs, so only one this
+  // service put away releases its workspace.
+  return BrowserWindowInterface::FromSessionID(*host) &&
+         !put_away_windows_.contains(*host);
 }
 
 std::optional<SessionID> WorkspaceService::GetUnmanagedWindowFor(
@@ -242,7 +266,9 @@ void WorkspaceService::SwapVisibleWindow(BrowserWindowInterface* from_window,
   // person was already looking rather than wherever it last sat.
   to_window->GetWindow()->SetBounds(from_window->GetWindow()->GetBounds());
   to_window->GetWindow()->Show();
+  put_away_windows_.erase(to_id);
   from_window->GetWindow()->Hide();
+  put_away_windows_.insert(from_id);
 }
 
 void WorkspaceService::SwitchWindowToWorkspace(
@@ -310,7 +336,7 @@ void WorkspaceService::OpenWorkspaceWindow(
     return;
   }
 
-  BindWorkspaceToWindow(id, to_window);
+  BindWorkspaceToWindowForRestore(id, to_window);
   SwapVisibleWindow(from_window, to_window);
 
   // A workspace opened for the first time this session still lives on disk.
@@ -330,20 +356,37 @@ void WorkspaceService::OpenWorkspaceWindow(
 void WorkspaceService::DoFillWorkspaceWindow(
     base::Uuid id,
     SessionID window_id,
-    std::vector<std::unique_ptr<sessions::SessionCommand>> commands) {
+    std::optional<std::vector<std::unique_ptr<sessions::SessionCommand>>>
+        commands) {
+  windows_awaiting_restore_.erase(window_id);
+
   BrowserWindowInterface* window =
       BrowserWindowInterface::FromSessionID(window_id);
   if (!window) {
-    workspace_to_window_.erase(id);
+    // Only release the binding if this workspace is still pointed at the
+    // window we were filling; it may have been reopened somewhere else while
+    // the read was in flight.
+    auto it = workspace_to_window_.find(id);
+    if (it != workspace_to_window_.end() && it->second == window_id) {
+      workspace_to_window_.erase(it);
+      workspaces_changed_callbacks_.Notify();
+    }
     return;
   }
 
-  if (commands.empty()) {
+  if (!commands) {
+    // The workspace could not be read. Leave it bound to nothing so the empty
+    // window cannot save itself over whatever is still on disk.
+    UnbindWindow(window_id);
+    return;
+  }
+
+  if (commands->empty()) {
     // Nothing saved yet, so the window keeps the new tab it opened with.
     return;
   }
 
-  RestoreWorkspaceIntoWindow(window, std::move(commands));
+  RestoreWorkspaceIntoWindow(window, std::move(*commands));
 }
 
 void WorkspaceService::SwitchWindowToUnmanaged(
@@ -374,7 +417,7 @@ WorkspaceMetadata WorkspaceService::CreateWorkspaceInWindow(
   return workspace;
 }
 
-bool WorkspaceService::HasNoVisibleWindowsExcept(
+bool WorkspaceService::HasOnlyPutAwayWindowsExcept(
     BrowserWindowInterface* ignored) const {
   auto* collection =
       ProfileBrowserCollection::GetForProfile(base::to_address(profile_));
@@ -382,36 +425,29 @@ bool WorkspaceService::HasNoVisibleWindowsExcept(
     return true;
   }
 
-  bool any_visible = false;
+  bool any_reachable = false;
   collection->ForEach([&](BrowserWindowInterface* browser) {
     if (browser != ignored &&
         browser->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL &&
-        browser->GetWindow()->IsVisible()) {
-      any_visible = true;
+        !put_away_windows_.contains(browser->GetSessionID())) {
+      any_reachable = true;
       return false;
     }
     return true;
   });
-  return !any_visible;
+  return !any_reachable;
 }
 
-void WorkspaceService::CloseHiddenWindows() {
-  auto* collection =
-      ProfileBrowserCollection::GetForProfile(base::to_address(profile_));
-  if (!collection) {
-    return;
+void WorkspaceService::ClosePutAwayWindows() {
+  std::vector<raw_ptr<BrowserWindowInterface>> put_away;
+  for (SessionID window_id : put_away_windows_) {
+    if (auto* browser = BrowserWindowInterface::FromSessionID(window_id)) {
+      put_away.push_back(browser);
+    }
   }
 
-  std::vector<raw_ptr<BrowserWindowInterface>> hidden;
-  collection->ForEach([&](BrowserWindowInterface* browser) {
-    if (!browser->GetWindow()->IsVisible()) {
-      hidden.push_back(browser);
-    }
-    return true;
-  });
-
   // Closing runs each window through WillCloseAllTabs, which is what saves it.
-  for (BrowserWindowInterface* browser : hidden) {
+  for (BrowserWindowInterface* browser : put_away) {
     // Mark the close as already confirmed. These windows are off screen, so a
     // prompt naming their tabs would come out of nowhere; the person answered
     // for the window they were actually looking at. This is the same signal
@@ -428,6 +464,13 @@ void WorkspaceService::BindWorkspaceToWindow(const base::Uuid& id,
   workspaces_changed_callbacks_.Notify();
 }
 
+void WorkspaceService::BindWorkspaceToWindowForRestore(
+    const base::Uuid& id,
+    BrowserWindowInterface* window) {
+  BindWorkspaceToWindow(id, window);
+  windows_awaiting_restore_.insert(window->GetSessionID());
+}
+
 void WorkspaceService::WillCloseAllTabs(TabStripModel* tab_strip_model) {
   // The last chance to capture a workspace: these tabs are about to go, and
   // they are still here, so one of them can name the window they live in.
@@ -437,8 +480,15 @@ void WorkspaceService::WillCloseAllTabs(TabStripModel* tab_strip_model) {
   if (!window) {
     return;
   }
-  if (std::optional<base::Uuid> id =
-          GetWorkspaceForWindow(window->GetSessionID())) {
+
+  const SessionID window_id = window->GetSessionID();
+  if (windows_awaiting_restore_.contains(window_id)) {
+    // The window is still holding its placeholder tab while the workspace is
+    // read off disk. Saving now would write that placeholder over it.
+    return;
+  }
+
+  if (std::optional<base::Uuid> id = GetWorkspaceForWindow(window_id)) {
     SaveWorkspaceFromWindow(*id, window);
   }
 }
@@ -458,6 +508,8 @@ void WorkspaceService::OnBrowserClosed(BrowserWindowInterface* browser) {
   // tabs.
   const SessionID window_id = browser->GetSessionID();
   UnbindWindow(window_id);
+  put_away_windows_.erase(window_id);
+  windows_awaiting_restore_.erase(window_id);
   std::erase_if(window_to_unmanaged_window_, [window_id](const auto& entry) {
     return entry.first == window_id || entry.second == window_id;
   });
@@ -465,9 +517,9 @@ void WorkspaceService::OnBrowserClosed(BrowserWindowInterface* browser) {
   // Hidden windows must not keep the browser running. Once the last visible
   // window is gone, retire them so normal shutdown can proceed. Deferred
   // because this runs while |browser| is still being torn down.
-  if (HasNoVisibleWindowsExcept(nullptr)) {
+  if (HasOnlyPutAwayWindowsExcept(nullptr)) {
     base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
         FROM_HERE,
-        base::BindOnce(&WorkspaceService::CloseHiddenWindows, GetWeakPtr()));
+        base::BindOnce(&WorkspaceService::ClosePutAwayWindows, GetWeakPtr()));
   }
 }

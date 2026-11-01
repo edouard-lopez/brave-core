@@ -90,18 +90,17 @@ void WriteWorkspaceToDisk(
                           std::move(on_error));
 }
 
-std::vector<std::unique_ptr<sessions::SessionCommand>> ReadWorkspaceFromDisk(
-    const base::FilePath& workspace_path,
-    scoped_refptr<sessions::CommandStorageBackend> backend) {
+std::optional<std::vector<std::unique_ptr<sessions::SessionCommand>>>
+ReadWorkspaceFromDisk(const base::FilePath& workspace_path,
+                      scoped_refptr<sessions::CommandStorageBackend> backend) {
   // Only do file I/O here.  Callers must call RestoreSessionFromCommands() on
   // the UI thread because SessionTab/SessionWindow constructors call
   // SessionID::NewUnique() which is sequence-checked to the UI thread.
   sessions::CommandStorageBackend::ReadCommandsResult result =
       backend->ReadLastSessionCommands();
-  if (sessions::IsCommandStorageReadError(result.status) ||
-      result.commands.empty()) {
+  if (sessions::IsCommandStorageReadError(result.status)) {
     DVLOG(1) << "Could not read workspace session from: " << workspace_path;
-    return {};
+    return std::nullopt;
   }
   return std::move(result.commands);
 }
