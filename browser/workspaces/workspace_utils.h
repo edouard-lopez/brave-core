@@ -7,6 +7,8 @@
 #define BRAVE_BROWSER_WORKSPACES_WORKSPACE_UTILS_H_
 
 #include <memory>
+#include <optional>
+#include <string_view>
 #include <vector>
 
 #include "base/files/file_path.h"
@@ -48,9 +50,16 @@ std::vector<std::unique_ptr<sessions::SessionCommand>> ReadWorkspaceFromDisk(
     const base::FilePath& workspace_path,
     scoped_refptr<sessions::CommandStorageBackend> backend);
 
+// Parses one entry of the workspace metadata dict, whose key is the
+// workspace's UUID. Returns nullopt when |key| is not a UUID or |value| is not
+// a workspace entry, which is how metadata written before workspaces were
+// keyed by UUID is discarded.
+std::optional<WorkspaceMetadata> WorkspaceMetadataFromDictEntry(
+    std::string_view key,
+    const base::Value& value);
+
 // Parses the workspace metadata dict stored under
 // kWorkspacesMetadataPref and returns a list sorted by modified_at descending.
-// Each key is a workspace UUID; entries with a non-UUID key are skipped.
 std::vector<WorkspaceMetadata> ListWorkspacesFromDict(
     const base::DictValue& dict);
 

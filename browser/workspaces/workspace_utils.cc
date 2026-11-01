@@ -7,6 +7,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -25,32 +27,36 @@ constexpr const char kWorkspaceModifiedAt[] = "modified-at";
 
 }  // namespace
 
+std::optional<WorkspaceMetadata> WorkspaceMetadataFromDictEntry(
+    std::string_view key,
+    const base::Value& value) {
+  const base::DictValue* entry = value.GetIfDict();
+  if (!entry) {
+    return std::nullopt;
+  }
+  base::Uuid id = base::Uuid::ParseLowercase(key);
+  if (!id.is_valid()) {
+    return std::nullopt;
+  }
+  const std::string* name = entry->FindString(kWorkspaceName);
+  if (!name || name->empty()) {
+    return std::nullopt;
+  }
+  return WorkspaceMetadata{
+      .id = std::move(id),
+      .name = *name,
+      .modified_at = base::ValueToTime(entry->Find(kWorkspaceModifiedAt))
+                         .value_or(base::Time::Now()),
+      .number_of_tabs = entry->FindInt(kWorkspaceTabCount).value_or(0)};
+}
+
 std::vector<WorkspaceMetadata> ListWorkspacesFromDict(
     const base::DictValue& dict) {
   std::vector<WorkspaceMetadata> result;
   for (const auto [key, value] : dict) {
-    const base::DictValue* entry = value.GetIfDict();
-    if (!entry) {
-      continue;
+    if (auto info = WorkspaceMetadataFromDictEntry(key, value)) {
+      result.push_back(std::move(*info));
     }
-    // The key is the workspace's identity. Entries whose key is not a UUID
-    // are skipped, which also discards entries written before workspaces were
-    // keyed by UUID.
-    base::Uuid id = base::Uuid::ParseLowercase(key);
-    if (!id.is_valid()) {
-      continue;
-    }
-    const std::string* name = entry->FindString(kWorkspaceName);
-    if (!name || name->empty()) {
-      continue;
-    }
-    WorkspaceMetadata info = {
-        .id = std::move(id),
-        .name = *name,
-        .modified_at = base::ValueToTime(entry->Find(kWorkspaceModifiedAt))
-                           .value_or(base::Time::Now()),
-        .number_of_tabs = entry->FindInt(kWorkspaceTabCount).value_or(0)};
-    result.push_back(std::move(info));
   }
 
   std::sort(result.begin(), result.end(),

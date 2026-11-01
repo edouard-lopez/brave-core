@@ -124,9 +124,10 @@ void RestoreWorkspaceIntoWindow(
   const sessions::SessionWindow& session_window = *windows.front();
   TabStripModel* tsm = window->GetTabStripModel();
 
-  // Append after whatever is already open so this function never destroys
-  // tabs; emptying the window first is the caller's decision.
-  const int base_index = tsm->count();
+  // The saved tabs go after the window's placeholder tab, which is retired
+  // once they are in place.
+  const int placeholder_count = tsm->count();
+  const int base_index = placeholder_count;
 
   // We restore tabs ourselves rather than using RestoreForeignSessionWindows
   // because that API creates an empty new_group_ids map and never calls
@@ -165,12 +166,9 @@ void RestoreWorkspaceIntoWindow(
   if (active >= base_index && active < tsm->count()) {
     tsm->ActivateTabAt(active);
   }
-}
 
-void CloseLeadingTabs(BrowserWindowInterface* window, int count) {
-  TabStripModel* tsm = window->GetTabStripModel();
   // Close back-to-front so earlier indices stay valid as tabs are removed.
-  for (int i = std::min(count, tsm->count()) - 1; i >= 0; --i) {
+  for (int i = std::min(placeholder_count, tsm->count()) - 1; i >= 0; --i) {
     tsm->CloseWebContentsAt(i, TabCloseTypes::CLOSE_NONE);
   }
 }
