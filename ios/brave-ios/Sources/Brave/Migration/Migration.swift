@@ -66,6 +66,7 @@ public class BraveProfileMigrations {
     Preferences.Shields.autoRedirectTrackingURLsDeprecated.value = nil
   }
 
+  @available(*, deprecated, message: "Use BraveShieldsTabHelper and/or content settings instead.")
   @MainActor public func migrateShieldsToContentSettings() {
     guard !Preferences.Shields.Migration.shieldsCoreDataToContentSettingsCompleted.value,
       let braveShieldsSettings = BraveShieldsSettingsServiceFactory.get(
@@ -374,6 +375,7 @@ extension Migration {
   }
 
   /// Migrate the shield level from the previous on/off toggle to the new ShieldLevel picker
+  @available(*, deprecated, message: "Use BraveShieldsTabHelper and/or content settings instead.")
   @MainActor private static func migrateShieldLevel() {
     guard
       !Preferences.Migration
