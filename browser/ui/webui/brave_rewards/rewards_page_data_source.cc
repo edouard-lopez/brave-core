@@ -27,7 +27,7 @@
 #include "ui/webui/webui_util.h"
 
 #if !BUILDFLAG(IS_ANDROID)
-#include "chrome/browser/ui/webui/theme_source.h"  // nogncheck
+#include "chrome/browser/ui/webui/theme_source.h"
 #endif
 
 namespace brave_rewards {
