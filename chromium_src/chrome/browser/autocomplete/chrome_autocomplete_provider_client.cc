@@ -12,8 +12,8 @@
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/browser_window/public/profile_browser_collection.h"
 #include "content/public/browser/web_contents.h"
+#include "ui/base/mojom/window_open_disposition.mojom.h"
 #include "ui/base/page_transition_types.h"
-#include "ui/base/window_open_disposition.h"
 
 #if BUILDFLAG(ENABLE_AI_CHAT)
 #include "brave/browser/ai_chat/ai_chat_service_factory.h"
@@ -76,11 +76,12 @@ void ChromeAutocompleteProviderClient::OpenLeo(const std::u16string& query) {
   if (ai_chat_service->IsAIChatHistoryEnabled() &&
       ai_chat::features::kOmniboxOpensFullPage.Get()) {
     conversation_handler = ai_chat_service->CreateConversation();
-    browser->OpenURL({ai_chat::ConversationUrl(
-                          conversation_handler->get_conversation_uuid()),
-                      content::Referrer(), WindowOpenDisposition::kCurrentTab,
-                      ui::PageTransition::PAGE_TRANSITION_GENERATED, false},
-                     {});
+    browser->OpenURL(
+        {ai_chat::ConversationUrl(
+             conversation_handler->get_conversation_uuid()),
+         content::Referrer(), ui::mojom::WindowOpenDisposition::kCurrentTab,
+         ui::PageTransition::PAGE_TRANSITION_GENERATED, false},
+        {});
   } else {
     auto* chat_tab_helper = ai_chat::AIChatTabHelper::FromWebContents(
         browser->GetTabStripModel()->GetActiveWebContents());

@@ -17,6 +17,7 @@
 #include "brave/components/constants/webui_url_constants.h"
 #include "chrome/android/chrome_jni_headers/BraveLeoUtils_jni.h"
 #include "content/public/browser/web_contents.h"
+#include "ui/base/mojom/window_open_disposition.mojom.h"
 
 namespace ai_chat {
 
@@ -64,7 +65,7 @@ static void JNI_BraveLeoUtils_OpenLeoQuery(
 
   content::OpenURLParams params(
       ConversationUrl(conversation->get_conversation_uuid()),
-      content::Referrer(), WindowOpenDisposition::kCurrentTab,
+      content::Referrer(), ui::mojom::WindowOpenDisposition::kCurrentTab,
       ui::PAGE_TRANSITION_FROM_API, false);
   web_contents->OpenURL(params, {});
 }
@@ -87,7 +88,7 @@ static void JNI_BraveLeoUtils_OpenLeoUrlForTab(
 
   content::OpenURLParams params(
       ConversationUrl(conversation->get_conversation_uuid()),
-      content::Referrer(), WindowOpenDisposition::kNewForegroundTab,
+      content::Referrer(), ui::mojom::WindowOpenDisposition::kNewForegroundTab,
       ui::PAGE_TRANSITION_FROM_API, false);
   web_contents->OpenURL(params, {});
 }

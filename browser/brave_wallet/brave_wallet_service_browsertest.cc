@@ -42,6 +42,7 @@
 #include "net/test/embedded_test_server/embedded_test_server.h"
 #include "ui/base/clipboard/clipboard.h"
 #include "ui/base/l10n/l10n_util.h"
+#include "ui/base/mojom/window_open_disposition.mojom.h"
 #include "ui/message_center/public/cpp/notification.h"
 #include "url/origin.h"
 
@@ -204,7 +205,7 @@ IN_PROC_BROWSER_TEST_F(BraveWalletServiceTest, ActiveOrigin) {
   expected_origin_info = MakeOriginInfo(url::Origin::Create(url));
   observer.Reset();
   ui_test_utils::NavigateToURLWithDisposition(
-      browser(), url, WindowOpenDisposition::kNewForegroundTab,
+      browser(), url, ui::mojom::WindowOpenDisposition::kNewForegroundTab,
       ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP);
   wallet_service()->GetActiveOrigin(base::BindOnce(
       &OnGetActiveOrigin, &callback_called, expected_origin_info->Clone()));
@@ -216,7 +217,7 @@ IN_PROC_BROWSER_TEST_F(BraveWalletServiceTest, ActiveOrigin) {
   expected_origin_info = MakeOriginInfo(url::Origin::Create(url));
   observer.Reset();
   ui_test_utils::NavigateToURLWithDisposition(
-      browser(), url, WindowOpenDisposition::kNewWindow,
+      browser(), url, ui::mojom::WindowOpenDisposition::kNewWindow,
       ui_test_utils::BROWSER_TEST_WAIT_FOR_LOAD_STOP);
   wallet_service()->GetActiveOrigin(base::BindOnce(
       &OnGetActiveOrigin, &callback_called, expected_origin_info->Clone()));

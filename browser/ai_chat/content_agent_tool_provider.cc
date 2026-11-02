@@ -43,6 +43,7 @@
 #include "components/optimization_guide/content/browser/page_content_proto_provider.h"
 #include "components/tabs/public/tab_interface.h"
 #include "content/public/browser/web_contents.h"
+#include "ui/base/mojom/window_open_disposition.mojom.h"
 #include "ui/base/page_transition_types.h"
 
 static_assert(BUILDFLAG(ENABLE_BRAVE_AI_CHAT_AGENT_PROFILE));
@@ -180,7 +181,7 @@ void ContentAgentToolProvider::GetOrCreateTabHandleForTask(
     // of acting on existing tabs.
     NavigateParams params(profile_, GURL(url::kAboutBlankURL),
                           ui::PAGE_TRANSITION_FROM_API);
-    params.disposition = WindowOpenDisposition::kNewForegroundTab;
+    params.disposition = ui::mojom::WindowOpenDisposition::kNewForegroundTab;
     Navigate(&params);
     content::WebContents* new_contents = params.navigated_or_inserted_contents;
 
