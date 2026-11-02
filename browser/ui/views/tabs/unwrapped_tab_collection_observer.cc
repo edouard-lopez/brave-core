@@ -205,6 +205,15 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
   }
 
   // TabStripModelObserver:
+  void OnTabStripModelChanged(
+      TabStripModel* tab_strip_model,
+      const TabStripModelChange& change,
+      const TabStripSelectionChange& selection) override {
+    if (selection.active_tab_changed()) {
+      ScheduleExpandActiveTabAncestors();
+    }
+  }
+
   void OnTreeTabChanged(const TreeTabChange& change) override {
     const std::vector<const tabs::TabInterface*> node_tabs =
         GetTabsOfTreeTabChange(model_, change);
@@ -429,6 +438,30 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
         }
       }
     }
+
+    // e.g. A new active tab could be moved under a collapsed tree tab node.
+    ScheduleExpandActiveTabAncestors();
+  }
+
+  void ScheduleExpandActiveTabAncestors() {
+    // Expanding notifies the tab strip model's observers, so don't do it in the
+    // middle of the model's notifications.
+    if (expand_pending_) {
+      return;
+    }
+    expand_pending_ = true;
+    base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
+        FROM_HERE,
+        base::BindOnce(
+            &UnwrappedTabCollectionObserver::ExpandActiveTabAncestors,
+            weak_ptr_factory_.GetWeakPtr()));
+  }
+
+  void ExpandActiveTabAncestors() {
+    expand_pending_ = false;
+    if (!model_->closing_all()) {
+      ExpandCollapsedTreeTabAncestors(model_->GetActiveTab());
+    }
   }
 
   const raw_ptr<TabStripModel> model_;
@@ -437,6 +470,7 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
   std::vector<tabs::TabHandle> moved_tabs_;
   std::vector<tabs::TabHandle> toggle_button_tabs_;
   bool update_pending_ = false;
+  bool expand_pending_ = false;
   base::WeakPtrFactory<UnwrappedTabCollectionObserver> weak_ptr_factory_{this};
 };
 
