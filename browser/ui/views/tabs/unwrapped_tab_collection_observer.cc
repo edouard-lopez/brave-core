@@ -26,11 +26,13 @@
 #include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/tabs/common/root_tab_collection_node.h"
 #include "chrome/browser/ui/views/tabs/common/tab_collection_node.h"
+#include "chrome/browser/ui/views/tabs/common/tab_view.h"
 #include "components/tabs/public/tab_collection.h"
 #include "components/tabs/public/tab_collection_observer.h"
 #include "components/tabs/public/tab_collection_types.h"
 #include "components/tabs/public/tab_interface.h"
 #include "ui/views/view.h"
+#include "ui/views/view_utils.h"
 
 namespace tree_tab_view_utils {
 
@@ -206,6 +208,10 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
   void OnTreeTabChanged(const TreeTabChange& change) override {
     const std::vector<const tabs::TabInterface*> node_tabs =
         GetTabsOfTreeTabChange(model_, change);
+    for (const tabs::TabInterface* tab : node_tabs) {
+      toggle_button_tabs_.push_back(tab->GetHandle());
+    }
+
     if ((change.type == TreeTabChange::kNodeCreated ||
          change.type == TreeTabChange::kNodeReparented) &&
         !node_tabs.empty()) {
@@ -392,6 +398,7 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
   void Update() {
     update_pending_ = false;
     auto moved_tabs = std::exchange(moved_tabs_, {});
+    auto toggle_button_tabs = std::exchange(toggle_button_tabs_, {});
     if (!root_node_->view() || model_->closing_all()) {
       return;
     }
@@ -414,12 +421,21 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
     if (!tabs.empty()) {
       RemoveDetachedNodes(*root_node_);
     }
+
+    for (const auto& handle : toggle_button_tabs) {
+      if (TabCollectionNode* node = root_node_->GetNodeForHandle(handle)) {
+        if (auto* tab_view = views::AsViewClass<TabView>(node->view())) {
+          tab_view->UpdateTreeToggleButton();
+        }
+      }
+    }
   }
 
   const raw_ptr<TabStripModel> model_;
   const raw_ptr<RootTabCollectionNode> root_node_;
   bool unwrapping_ = false;
   std::vector<tabs::TabHandle> moved_tabs_;
+  std::vector<tabs::TabHandle> toggle_button_tabs_;
   bool update_pending_ = false;
   base::WeakPtrFactory<UnwrappedTabCollectionObserver> weak_ptr_factory_{this};
 };
