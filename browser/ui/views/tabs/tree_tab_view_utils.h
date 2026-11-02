@@ -19,6 +19,10 @@ namespace tabs {
 class TabInterface;
 }  // namespace tabs
 
+namespace views {
+class View;
+}  // namespace views
+
 // Hooks for showing tree tabs in Chromium's tab strip views
 // (TabCollectionNode based, used by Chromium's vertical tabs). The chromium_src
 // overrides of those views forward-declare these instead of including this
@@ -56,6 +60,15 @@ bool IsInTabStrip(const tabs::TabCollection* root,
 std::vector<const tabs::TabInterface*> GetTabsOfTreeTabChange(
     TabStripModel* model,
     const TreeTabChange& change);
+
+// Returns the indentation for |view| (a TabView, TabGroupView or SplitTabView)
+// based on its tree tab level. |available_width| is the width |view| would
+// have without indentation.
+int GetTreeTabIndent(const views::View* view, int available_width);
+
+// Returns true if |view| (a TabView, TabGroupView or SplitTabView) is hidden
+// because one of its tree tab ancestors is collapsed.
+bool IsInCollapsedTreeTabNode(const views::View* view);
 
 }  // namespace tree_tab_view_utils
 

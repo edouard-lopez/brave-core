@@ -23,6 +23,7 @@ source_set("tree_tab_view_utils") {
     "//brave/browser/ui/tabs:tab_strip",
     "//brave/browser/ui/tabs:tree_tab",
     "//brave/components/tabs",
+    "//chrome/browser/ui:layout_constants",
     "//chrome/browser/ui/tabs:tab_strip",
     "//chrome/browser/ui/views/tabs/common",
     "//chrome/browser/ui/views/tabs/common:impl",

@@ -30,6 +30,7 @@
 #include "components/tabs/public/tab_collection_observer.h"
 #include "components/tabs/public/tab_collection_types.h"
 #include "components/tabs/public/tab_interface.h"
+#include "ui/views/view.h"
 
 namespace tree_tab_view_utils {
 
@@ -216,6 +217,17 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
              tree_node_collection->GetTabsRecursive()) {
           moved_tabs_.push_back(tab->GetHandle());
         }
+      }
+    }
+
+    if (change.type == TreeTabChange::kNodeCollapsedStateChanged ||
+        change.type == TreeTabChange::kNodeChildrenChanged ||
+        change.type == TreeTabChange::kNodeReparented) {
+      // Indentation and visibility.
+      if (TabCollectionNode* unpinned_node =
+              root_node_->GetChildNodeOfType(TabCollectionNode::Type::UNPINNED);
+          unpinned_node && unpinned_node->view()) {
+        unpinned_node->view()->InvalidateLayout();
       }
     }
 
