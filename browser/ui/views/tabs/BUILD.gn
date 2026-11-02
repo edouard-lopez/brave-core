@@ -5,6 +5,34 @@
 
 import("//build/config/ozone.gni")
 
+import("//brave/components/tabs//buildflags/buildflags.gni")
+
+assert(enable_brave_tree_tabs)
+
+# Tree tab hooks for Chromium's tab strip views. The chromium_src overrides of
+# //chrome/browser/ui/views/tabs/common forward-declare these, and
+# //brave/browser:core links them.
+source_set("tree_tab_view_utils") {
+  sources = [
+    "tree_tab_view_utils.cc",
+    "tree_tab_view_utils.h",
+    "unwrapped_tab_collection_observer.cc",
+    "unwrapped_tab_collection_observer.h",
+  ]
+
+  public_deps = [ "//components/tabs:public" ]
+
+  deps = [
+    "//base",
+    "//brave/browser/ui/tabs:tab_strip",
+    "//brave/components/tabs",
+    "//chrome/browser/ui/tabs:tab_strip",
+    "//chrome/browser/ui/views/tabs/common",
+    "//chrome/browser/ui/views/tabs/common:impl",
+    "//ui/views",
+  ]
+}
+
 source_set("browser_tests") {
   testonly = true
   defines = [ "HAS_OUT_OF_PROC_TEST_RUNNER" ]

@@ -1,0 +1,22 @@
+# Copyright (c) 2026 The Brave Authors. All rights reserved.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at https://mozilla.org/MPL/2.0/.
+
+substitutions:
+  - description: |-
+      Observe the collection hierarchy with tree tab node collections unwrapped in RootTabCollectionNode::Init().
+
+      Tree tab node collections are not in the view model, see
+      brave/browser/ui/views/tabs/unwrapped_tab_collection_observer.h.
+    regex:
+      re_pattern: 'tab_strip_model_->Root\(\)->AddObserver\(this\);'
+      replace: |-
+        tree_tab_view_utils::AddUnwrappedTabCollectionObserver(tab_strip_model_,
+                                                                 this);
+
+  - description: |-
+      Stop observing the collection hierarchy in RootTabCollectionNode::Reset().
+    regex:
+      re_pattern: 'tab_strip_model_->Root\(\)->RemoveObserver\(this\);'
+      replace: 'tree_tab_view_utils::RemoveUnwrappedTabCollectionObserver(this);'

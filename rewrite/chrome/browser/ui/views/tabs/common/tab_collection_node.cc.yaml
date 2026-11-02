@@ -20,7 +20,8 @@ substitutions:
   - description: |-
       Never create a view for a TREE_NODE in CreateViewForNode().
 
-      We don't have speciali view for TREE_NODE yet.
+      Tree tab node collections are unwrapped in the view model, see
+      brave/browser/ui/views/tabs/tree_tab_view_utils.h.
     regex:
       re_pattern: |-
         (TabCollectionNode::CreateViewForNode\([^)]*\)\s*\{.*?\n\s*switch[^{]*\{)
@@ -29,3 +30,14 @@ substitutions:
         \1
             case Type::TREE_NODE:
               NOTREACHED();
+
+  - description: |-
+      Walk the children with tree tab node collections unwrapped in TabCollectionNode::Initialize() and TabCollectionNode::Deinitialize().
+
+      Groups and splits are walked as they are. Defined in chromium_src.
+    count: 2
+    regex:
+      re_pattern: 'for \(const auto& child_data : collection->GetChildren\(\)\)'
+      replace: |-
+        for (const tabs::Child& child_data :
+                 tree_tab_view_utils::GetUnwrappedChildren(*collection))
