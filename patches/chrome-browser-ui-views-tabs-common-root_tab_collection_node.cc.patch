@@ -1,0 +1,21 @@
+diff --git a/chrome/browser/ui/views/tabs/common/root_tab_collection_node.cc b/chrome/browser/ui/views/tabs/common/root_tab_collection_node.cc
+index 7c362fa41355834860aa2c94211bf85df9c1bbab..581e289ca876a827f7874d8305ddaff28eb0c933 100644
+--- a/chrome/browser/ui/views/tabs/common/root_tab_collection_node.cc
++++ b/chrome/browser/ui/views/tabs/common/root_tab_collection_node.cc
+@@ -50,13 +50,14 @@ RootTabCollectionNode::RootTabCollectionNode(
+ RootTabCollectionNode::~RootTabCollectionNode() = default;
+ 
+ void RootTabCollectionNode::Init() {
+-  tab_strip_model_->Root()->AddObserver(this);
++  tree_tab_view_utils::AddUnwrappedTabCollectionObserver(tab_strip_model_,
++                                                         this);
+   tab_strip_model_->SetTabStripUI(this);
+   add_node_view_to_parent_.Run(Initialize());
+ }
+ 
+ void RootTabCollectionNode::Reset() {
+-  tab_strip_model_->Root()->RemoveObserver(this);
++  tree_tab_view_utils::RemoveUnwrappedTabCollectionObserver(this);
+   tab_strip_model_->RemoveObserver(this);
+   Deinitialize();
+   views::View* view = std::exchange(node_view_, nullptr);
