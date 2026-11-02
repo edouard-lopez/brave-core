@@ -160,7 +160,6 @@
 -AIWriterTest.*
 -AIWriterWithFeatureConfigTest.*
 -ActorSitePolicyTest.*
--ActorTaskListBubbleControllerTest.*
 -All/ChangePasswordFormFinderTest.*/*
 -All/IndigoPageActionControllerTest.*/*
 -ChangePasswordFormFinderTest.*
@@ -193,6 +192,9 @@
 -ExecutionEngineUrlGatingTest.ShouldDeferNavigation_CrossOriginSensitiveBlocked
 -ExplainSelectionTriggerTest.RequestExplanationOptimizationGuide*
 -FindsTabHelperTest.TestOmniboxRecentSearchSuggestionCountThresholdMet
+-GlicActivityListBubbleControllerActivityHubTest.*
+-GlicActivityListBubbleControllerOsNotificationDisabledTest.ShowBubble_InactiveBrowserWindow_StartNotification_PanelShowing
+-GlicActivityListBubbleControllerTest.*
 -HistoryEmbeddingsHandlerTest.*
 -IndigoPageActionControllerLegacyTest.*
 -LoginStateCheckerTest.*
@@ -221,9 +223,13 @@
 # kGrayscale instead of the kBaseline the tests expect for the non-system,
 # non-device-theme cases.
 -ColorProviderTest.SystemThemeUsesNativeUserColor/Dark
+-ColorProviderTest.SystemThemeUsesNativeUserColor/DarkCacheThemePrefs
 -ColorProviderTest.SystemThemeUsesNativeUserColor/DarkHighContrast
+-ColorProviderTest.SystemThemeUsesNativeUserColor/DarkHighContrastCacheThemePrefs
 -ColorProviderTest.SystemThemeUsesNativeUserColor/Light
+-ColorProviderTest.SystemThemeUsesNativeUserColor/LightCacheThemePrefs
 -ColorProviderTest.SystemThemeUsesNativeUserColor/LightHighContrast
+-ColorProviderTest.SystemThemeUsesNativeUserColor/LightHighContrastCacheThemePrefs
 
 # These tests fail because we disable kFirstPartySets.
 -DefaultFirstPartySetsPolicyServiceTest.*
@@ -261,8 +267,14 @@
 # This test is disabled as we have our own ink drop configs.
 -ToolbarInkDropUtilTest.ConfigureInkDropTest
 
+# These tests fail because our MdTextButton turns upstream's ink drop off and
+# the widget now relies on the upstream MdTextButton default (ON).
+-GlicSelectionWidgetTest.SmallChip
+-GlicSelectionWidgetTest.SmallChipBottom
+
 # Prerender is disabled
 -PrerenderManagerBasicRequirementTest.*
+-PrerenderManagerPageLoadAndTabSwitchAfterPaintTest.*
 -PrerenderManagerPrewarmRevalidateDisabledTest.PrewarmPageNotCreatedAgainWhenRevalidateDisabled
 -PrerenderManagerPrewarmTest.*
 -PrerenderManagerTest.*
@@ -349,10 +361,7 @@
 -AccountExtensionTrackerUnitTest.AccountExtensionTypeTransportMode
 -AccountExtensionTrackerUnitTest.AccountExtensionsRemovedWhenSignedOut
 -AccountExtensionTrackerUnitTest.ExtensionSyncDisabledWhileSignedIn
--AccountsPolicyManagerTest.ClearProfileWhenSigninAndSignoutNotAllowed
 -ActionAppMenuManagerTest.ProfileSubmenu
--ActorTaskListBubbleControllerTest.ShowBubble*
--ActorTaskListBubbleTest.*
 -All/DiceResponseHandlerParamTest.Signin*/*
 -All/EnclaveAuthenticatorRequestDelegateTest.BrowserProvidedPasskeysAvailable/*
 -All/EnclaveAuthenticatorRequestDelegateTest.BrowserProvidedPasskeysAvailableForSignedInUsers/*
@@ -372,6 +381,8 @@
 -ContextualTasksEligibilityManagerTest.*
 -ContextualTasksUiServiceTest.PrefetchOnEligibilityChange
 -ContextualTasksUiServiceTest.PrefetchOnStartupIfAlreadyEligible
+-ContextualTasksUiTest.AccountInfo_WebSignedInWithFullName
+-ContextualTasksUiTest.GetContextualTasksLoadTimeData_IsSignedInReflectsCookieAndBrowserState
 -ContextualTasksUiTest.ProfileIndicator_*
 -ContextualTasksWebContentsUserDataTest.GetOrCreateInputStateModel_IdentityFallback_DefaultTrue
 -DeveloperPrivateApiTransportModeUnitTest.CannotUploadAfterSignOut
@@ -387,6 +398,9 @@
 -ExtensionLocalDataBatchUploaderTest.TriggerLocalDataMigrationForItems
 -ExtensionSyncServiceTransportModeTest.AccountExtensionTypeChangesWithSync
 -ExtensionSyncServiceTransportModeTest.OnlySyncAccountExtensions
+-GlicActivityListBubbleActivityHubTest.*
+-GlicActivityListBubbleControllerTest.ShowBubble*
+-GlicActivityListBubbleTest.*
 -GuestUtilMultiInstanceTest.GetGlicGuestURLWithSignedInAccount_SessionIndex0_NoWebviewEnabled
 -NotebooksEligibilityServiceFactoryTest.FeatureEnabledCreatesService
 -NotebooksServiceFactoryTest.FeatureEnabledUsesRealService
@@ -397,6 +411,7 @@
 -PeopleHandlerWebOnlySigninTest.ChromeSigninUserAvailableOnWebSignin
 -ProfileDynamicMenuTest.BuildSyncSection_SignedInProfile
 -ProfileDynamicMenuTest.BuildSyncSection_SyncError
+-ProfileReportGeneratorTest.SignedInProfile
 -SendTabToSelfPromoBubbleViewTest.LoadsAccountAwareDesign
 -ShowPromoTest.*
 -SigninUtilHistorySyncOptinTest.*
@@ -591,11 +606,19 @@
 -All/IncidentReportingServiceTest.*
 
 # This test times out because TaskEnvironment::FastForwardBy never returns.
--ActorTaskListBubbleControllerOsNotificationTest.ShowBubble_InactiveBrowserWindow_DoesNotShowBubble
+-GlicActivityListBubbleControllerOsNotificationTest.ShowBubble_InactiveBrowserWindow_DoesNotShowBubble
 -NotificationsEngagementServiceTest.EraseStaleEntries
 
 # This test fails because we stub out NetworkService::UpdateKeysPinList
 -PKIMetadataComponentInstallerKeyPinningTest.InstallComponentUpdatesPinningConfig
+
+# These tests fail because we override the pins generator to ignore the
+# caller's data in favour of Brave's, so the compiled-in unittest pins lack the
+# upstream test hosts. See rewrite/net/tools/
+# transport_security_state_generator/input_file_parsers.cc.yaml
+-PKIMetadataComponentInstallerKeyPinningTest.InstallComponentIncompatibleKPVersion
+-PKIMetadataComponentInstallerKeyPinningTest.InstallComponentInvalidKPProto
+-PKIMetadataComponentInstallerKeyPinningTest.InstallComponentKPListOlderThanBuiltIn
 
 # These tests are disabled because we hide the password card in
 # brave://settings/safetyCheck which also involves always returning a "safe"
@@ -786,7 +809,11 @@
 # These tests fail because we don't show the history sync promo
 -BrowsingHistoryHandlerHistorySyncPromoTest.ShouldShowHistoryPageHistorySyncPromo*/*
 
-# This test fails because we disable kDestroyProfileOnBrowserClose feature.
+# These tests fail because we disable kDestroyProfileOnBrowserClose feature.
+# They delete the profile and expect it to be destroyed, so TearDown() removes
+# an already-removed ProfileAttributesStorage entry (NOTREACHED).
+-AccountsPolicyManagerTest.ClearProfileWhenSigninAndSignoutNotAllowed
+-AccountsPolicyManagerTest.UserScopeBrowserSigninDisabledLogsDeleteProfileMetric
 -BookmarkDictImporterTest.FailsIfProfileIsDestroyed
 -ChromeContentVerifierTest.NonCfmChecksHashEvenWithForceFlag
 
@@ -840,12 +867,14 @@
 # registered.
 -ContextualSearchboxHandlerTest.QueryAutocomplete_NullBrowserWindowInterfaceDoesNotCrash
 -ContextualSearchboxHandlerTest.QueryAutocomplete_SetsLensInputs_InToolModes
+-ExecutePasteAndGoSchemeTest.FiltersClipboardSchemes/*
 -OmniboxComposeboxHandlerTest.OpenLensSearch
 -OmniboxContextMenuControllerSingleTabItemTest.*
 -OmniboxContextMenuControllerTest.*
 -OmniboxEditModelPopupTest.AiModeButtonClick*
 -OmniboxEditModelPopupTest.AimPopup*
 -OmniboxPopupHandlerTest.*
+-SecurityChipStateHelperTest.ExecutePasteAndGoUsesClientPageClassification
 -SmartTabSharingTest.QueryAutocomplete_*
 -WebuiOmniboxHandlerTabScopingTest.AddTabContext_ContextMenuDoesNotSetInvocationSource
 -WebuiOmniboxHandlerTabScopingTest.AddTabContext_CurrentTabChipSetsInvocationSource
@@ -963,6 +992,9 @@
 -NetworkHintsHandlerImplTest.*
 -RenderViewContextMenuPrefsTest.LensImageSearchIssuesGoogleLensPreconnect
 -RenderViewContextMenuPrefsTest.LensRegionSearchIssuesGoogleLensPreconnect
+
+# Lens is disabled
+-RenderViewContextMenuPrefsTest.GlicShareImageEligibility
 
 # As we reset VerticalTabs preference when it's not enabled via flags,
 # this test fails
@@ -1082,7 +1114,7 @@
 -TabTest.*
 -TemplateURLServiceSyncTest.MergeConflictingPrepopulatedEngine
 -ThemeLocalDataBatchUploaderTest.*
--ThemeServiceTest.IsGrayscale
+-ThemeServiceTest.IsGrayscale/*
 -ThemeSyncableServiceTest.GetAllSyncDataForTesting_Extension
 -ThemeSyncableServiceTest.OnThemeChangeByUser_Extension
 -ThemeSyncableServiceTest.RestoreSystemThemeBitWhenChangeToCustomTheme

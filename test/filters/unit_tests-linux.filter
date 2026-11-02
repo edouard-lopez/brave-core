@@ -27,6 +27,6 @@
 -NativeChromeColorMixerLinuxChipTest.DarkToolbarDarkModeReadable
 -NativeChromeColorMixerLinuxChipTest.LightToolbarLightModeReadable
 
+-All/WebAppShortcutLinuxTest.*
 -ChromePaths.*
 -ShellIntegrationTest.*
--WebAppShortcutLinuxTest.*

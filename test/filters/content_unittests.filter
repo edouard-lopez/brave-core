@@ -15,6 +15,7 @@
 # only allow moving temp files.
 -All/FileSystemAccessFileHandleImplMoveWriteModeTest.RequestsCorrectPermissions/*
 -All/FileSystemAccessFileHandleImplRenameWriteModeTest.RequestsCorrectPermissions/*
+-FileSystemAccessDirectoryHandleImplRevokedMountTest.ChildOperations_ReturnNotFound
 -FileSystemAccessDirectoryHandleImplTest.MoveNoReadAccess
 -FileSystemAccessFileHandleImplMoveTest.NoReadAccess
 -FileSystemAccessFileHandleImplMoveTest.NoReadAccessWriteOnlyDest
@@ -23,6 +24,7 @@
 -FileSystemAccessFileHandleImplRenameOnlyInHomedirTest.InsideHomedirRequiresParentWrite
 -FileSystemAccessFileHandleImplRenameOnlyInHomedirTest.OutsideHomedirDoesNotRequireParentWrite
 -FileSystemAccessFileHandleImplRenameTest.HasWriteAccess
+
 
 # These tests fail because we disable the client hints that the tests check.
 -ClientHintsTest.AddNavigationRequestClientHintsHeaders_MainFrame
