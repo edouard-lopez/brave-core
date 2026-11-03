@@ -3609,6 +3609,18 @@ To change this setting, <ph name="BEGIN_LINK">BEGIN_LINK</ph>delete the Brave da
       <message name="IDS_SAFETY_FRE_PROMO_SHOW_ME_HOW_BUTTON" desc="Text on the button to show the user how to configure safety settings from the Safety Promo screen of the First Run Experience.">
         Show me how
       </message>
+      <message name="IDS_SAFETY_FRE_PROMO_PASSWORD_MANAGER_BOTTOM_SHEET_TITLE" desc="Title of the bottom sheet that shows the user how to use Brave Password Manager. Opened from the Show me how button on the Safety Promo Carousel screen of the First Run Experience.">
+        Save passwords in Brave
+      </message>
+      <message name="IDS_SAFETY_FRE_PROMO_HISTORY_QUICK_DELETE_BOTTOM_SHEET_TITLE" desc="Title of the bottom sheet that shows the user how to quickly delete their browsing history. Opened from the Show me how button on the Safety Promo Carousel screen of the First Run Experience.">
+        Quickly delete browsing data
+      </message>
+      <message name="IDS_SAFETY_FRE_PROMO_ENHANCED_SAFE_BROWSING_BOTTOM_SHEET_TITLE" desc="Title of the bottom sheet that shows the user how to turn on Enhanced Safe Browsing. Opened from the Show me how button on the Safety Promo Carousel screen of the First Run Experience.">
+        Get Brave’s strongest security
+      </message>
+      <message name="IDS_SAFETY_FRE_PROMO_INCOGNITO_BOTTOM_SHEET_TITLE" desc="Title of the bottom sheet that shows the user how to lock their Private tabs. Opened from the Show me how button on the Safety Promo Carousel screen of the First Run Experience.">
+        Secure your Private tabs
+      </message>
       <message name="IDS_LIGHTWEIGHT_FRE_ASSOCIATED_APP_TOS" desc="Message explaining that use of Brave is governed by Brave's terms of service.">
         <ph name="APP_NAME">%1$s<ex>Brave Maps</ex></ph> will open in Brave. By continuing, you agree to the <ph name="BEGIN_LINK1">&lt;LINK1&gt;</ph>Brave Terms of Service<ph name="END_LINK1">&lt;/LINK1&gt;</ph>, and the <ph name="BEGIN_LINK2">&lt;LINK2&gt;</ph>Brave and ChromeOS Additional Terms of Service<ph name="END_LINK2">&lt;/LINK2&gt;</ph>.
       </message>
@@ -4126,6 +4138,15 @@ To change this setting, <ph name="BEGIN_LINK">BEGIN_LINK</ph>delete the Brave da
           other {<ph name="URL">%1$s<ex>example.com</ex></ph> and <ph name="TAB_COUNT_MANY">%2$s<ex>2</ex></ph> other tabs}
         }
       </message>
+      <message name="IDS_RECENT_TABS_WINDOW_CLOSURE_WITH_TITLE_ACCESSIBILITY" is_accessibility_with_no_ui="true" desc="Accessibility content description for a Recent Tabs Page &gt; Recently Closed row item that represents a single window closed that had a user specified window title. TITLE_OF_WINDOW is the user specified title of the window.">
+        Restore window <ph name="TITLE_OF_WINDOW">%1$s<ex>Work</ex></ph>.
+      </message>
+      <message name="IDS_RECENT_TABS_WINDOW_CLOSURE_WITHOUT_TITLE_ACCESSIBILITY" is_accessibility_with_no_ui="true" desc="Accessibility content description for a Recent Tabs Page &gt; Recently Closed row item that represents a single window closed that did not have a user specified title. TAB_COUNT is the total number of tabs closed in the window.">
+        {TAB_COUNT, plural,
+          =1 {Restore window of <ph name="TAB_COUNT_ONE">%1$s<ex>1</ex></ph> tab.}
+          other {Restore window of <ph name="TAB_COUNT_MANY">%1$s<ex>5</ex></ph> tabs.}
+        }
+      </message>
       <message name="IDS_RECENT_TABS_BULK_CLOSURE_ACCESSIBILITY" desc="Accessibility content description for a Recent Tabs Page &gt; Recently closed row item that represents multiple tabs/groups closed together. TAB_COUNT is the total number of tabs closed in the action including grouped tabs.">
         Restore <ph name="TAB_COUNT">%1$s<ex>6</ex></ph> tabs as new background tabs.
       </message>
@@ -4409,6 +4430,18 @@ To change this setting, <ph name="BEGIN_LINK">BEGIN_LINK</ph>delete the Brave da
       </message>
       <message name="IDS_MENU_CREATE_NEW_TAB_GROUP" desc="Menu item for creating a new tab group. [CHAR_LIMIT=27]">
         Create new tab group
+      </message>
+      <message name="IDS_OPEN_GROUP_MENU_ITEM" desc="Menu item for opening or focusing a tab group in the current window. [CHAR_LIMIT=27]">
+        Open group
+      </message>
+      <message name="IDS_OPEN_GROUP_IN_NEW_WINDOW_MENU_ITEM" desc="Menu item for opening a tab group in a new window. [CHAR_LIMIT=35]">
+        Open group in new window
+      </message>
+      <message name="IDS_DELETE_GROUP_MENU_ITEM" desc="Menu item for deleting a tab group. [CHAR_LIMIT=27]">
+        Delete group
+      </message>
+      <message name="IDS_TABS_IN_GROUP_SECTION_HEADER" desc="Section header in the app menu for listing the tabs contained inside a tab group. [CHAR_LIMIT=27]">
+        Tabs in group
       </message>
       <message name="IDS_MENU_RECENT_TABS" desc="Menu item for opening the 'Recent tabs' page that shows recently closed tabs and pages the user has opened on his/her other devices. [CHAR_LIMIT=27]">
         Recent tabs
@@ -5123,6 +5156,9 @@ To change this setting, <ph name="BEGIN_LINK">BEGIN_LINK</ph>delete the Brave da
       <message name="IDS_PDF_CANNOT_EDIT_PDF" desc="Toast message shown when a PDF document cannot be edited.">
         Cannot edit PDF
       </message>
+      <message name="IDS_PDF_APPLY_EDITS_FAILED" desc="Toast message shown when saving edits to a PDF document fails.">
+        Cannot save edits
+      </message>
       <message name="IDS_PDF_FIND_IN_PAGE_DISABLED_UNSAVED_CHANGES" desc="Toast message shown when find in page is disabled because there are unsaved changes.">
         Find in page disabled while there are unsaved changes.
       </message>
@@ -5703,6 +5739,10 @@ To change this setting, <ph name="BEGIN_LINK">BEGIN_LINK</ph>delete the Brave da
       </message>
       <message name="IDS_UNDO_BAR_CLOSED_MESSAGE" desc="Message shown when you close a combination of tabs and tab groups. See IDS_UNDO_BAR_TAB_GROUPS_AND_TABS_PART for TAB_GROUPS_AND_TABS_PART.">
         <ph name="TAB_GROUPS_AND_TABS_PART">%1$s<ex>5 tab groups, 3 tabs</ex></ph> closed
+      </message>
+      <!-- TODO(crbug.com/557182836): Make translateable before enabling the feature by default. -->
+      <message name="IDS_UNDO_TAB_RESTORE_FAILED_MESSAGE" desc="Toast/snackbar message shown when undoing a closed tab fails because the tab could not be restored." translateable="false">
+        Can't restore tab
       </message>
       <message name="IDS_CONFIRM_DELETE_MESSAGE" desc="Message shown or announced to get confirmation on whether a file should be deleted.">
         Do you want to delete <ph name="ITEM_TITLE">%1$s<ex>example.pdf</ex></ph>?
@@ -6340,26 +6380,6 @@ To change this setting, <ph name="BEGIN_LINK">BEGIN_LINK</ph>delete the Brave da
       </message>
       <message name="IDS_IPH_INCOGNITO_INDICATOR_CLOSE_ALL_WINDOWS_ACCESSIBILITY_TEXT" desc="The in-product-help accessibility text to inform users that they can close all private windows by tapping the private indicator.">
         To close all Private windows, tap the Private indicator
-      </message>
-
-      <!-- Bottom bar IPH strings. -->
-      <message name="IDS_IPH_ANDROID_BOTTOM_BAR_GLIC" desc="The in-product-help message for the GLIC button in the bottom bar.">
-        Ask Gemini to help with your tabs and tasks
-      </message>
-      <message name="IDS_IPH_ANDROID_BOTTOM_BAR_NEW_TAB" desc="The in-product-help message for the New Tab button in the bottom bar.">
-        Open a new tab
-      </message>
-      <message name="IDS_IPH_ANDROID_BOTTOM_BAR_DIALOG_TITLE" desc="Title for the in-product help dialog introducing Gemini in the bottom bar.">
-        Introducing Gemini in Brave
-      </message>
-      <message name="IDS_IPH_ANDROID_BOTTOM_BAR_DIALOG_DESCRIPTION" desc="Description for the bottom bar Gemini introduction dialog.">
-        Some tools have moved to give you easy access to Gemini while you browse
-      </message>
-      <message name="IDS_IPH_ANDROID_BOTTOM_BAR_TRIGGER_IPH" desc="Text on the button that triggers the in-product-help sequence.">
-        Show me
-      </message>
-      <message name="IDS_IPH_ANDROID_BOTTOM_BAR_DIALOG_ACK" desc="Button text to acknowledge bottom bar changes and dismiss the dialog.">
-        Got it
       </message>
 
       <message name="IDS_IPH_ANDROID_TAB_DECLUTTER_TEXT_WITH_TAB_GROUPS" desc="The in-product-help text for the android tab declutter feature.">
