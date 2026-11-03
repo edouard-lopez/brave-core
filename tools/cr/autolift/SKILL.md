@@ -524,12 +524,14 @@ before that. Brockit takes the branch's upstream as the base for both
 
 `prepare` picks it. `cr<N>` is the head branch, lifting to `@latest-for-branch`,
 until `cr<N+1>` appears on origin. From then on it is a maintenance branch that
-lifts only to a newer beta or stable release of its own milestone. With none, or
-on a head branch already on its milestone's latest tag, `prepare` says "No lift
-needed", and the run takes
-[Maintenance run without a lift](#maintenance-run-without-a-lift) after the
-rebase. Don't override the target, or lift by hand to `@latest-for-branch` on a
-maintenance branch.
+lifts only to a newer beta or stable release of its own milestone, minor bumps
+included. A head branch skips minor bumps (only the last number moves, cr159:
+`159.0.8140.1` to `159.0.8140.3`): not worth a lift until the build number
+moves. With no target, a head branch already on its milestone's latest tag, or
+one only a minor bump behind it, `prepare` says "No lift needed", and the run
+takes [Maintenance run without a lift](#maintenance-run-without-a-lift) after
+the rebase. Don't override the target, or lift by hand to `@latest-for-branch`
+on a maintenance branch.
 
 A run with no lift is worth it only for a rebase over 4 or more base commits,
 over any once the branch was last rebased more than a day ago, or over any when

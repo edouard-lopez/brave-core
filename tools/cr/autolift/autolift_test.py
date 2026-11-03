@@ -624,7 +624,7 @@ class PrepareFlowTest(unittest.TestCase):
     _RELEASES = {
         '@latest-beta': autolift.Version('158.0.8127.4'),
         '@latest-stable': autolift.Version('157.0.8103.24'),
-        '@latest-m158': autolift.Version('158.0.8127.7'),
+        '@latest-m158': autolift.Version('158.0.8128.1'),
         '@latest-m159': autolift.Version('159.0.8130.0'),
     }
 
@@ -898,6 +898,31 @@ class PrepareFlowTest(unittest.TestCase):
         )
         self.assertEqual(result, autolift.NOT_WORTH_A_RUN)
         run.assert_not_called()
+
+    def test_head_branch_skips_a_minor_bump_of_its_tag(self):
+        releases = dict(self._RELEASES)
+        releases['@latest-m158'] = autolift.Version('158.0.8127.7')
+        result, _, run, target = self._run(
+            158,
+            remote_exists=True,
+            releases=releases,
+            always=False,
+            base_commits=4,
+        )
+        self.assertEqual(result, 0)
+        self.assertEqual(target, 'none')
+        self.assertNotIn('--discard-regen-changes', run.call_args.args[0])
+        report = (self.run_root / 'cr158' / 'report.md').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn(
+            '158.0.8127.7 is only a minor bump of 158.0.8127.2', report
+        )
+
+    def test_head_branch_lifts_when_the_build_moves(self):
+        result, _, _, target = self._run(158, remote_exists=True)
+        self.assertEqual(result, 0)
+        self.assertEqual(target, '@latest-for-branch')
 
     def test_head_branch_on_its_latest_tag_only_rebases(self):
         releases = dict(self._RELEASES)

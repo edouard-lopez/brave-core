@@ -911,9 +911,16 @@ def _cmd_prepare(args: argparse.Namespace) -> int:
         summary += (
             f'- Target tag (@latest-m{args.milestone}): {tag or "unknown"}.\n'
         )
-        # A head branch already on its milestone's latest tag lifts nothing.
-        if exists and tag is not None and tag == Version.from_git('HEAD'):
+        # A head branch already on its milestone's latest tag lifts nothing,
+        # nor does it lift to a minor bump of its tag (only PATCH moves): not
+        # worth a run's hassle until the build number moves too.
+        current = Version.from_git('HEAD')
+        if exists and tag is not None and tag.parts[:3] == current.parts[:3]:
             lift_to = None
+            if tag != current:
+                summary += (
+                    f'- {tag} is only a minor bump of {current}: no lift.\n'
+                )
     if exists and not lift_to:
         plan = _no_lift_plan(base, Version.from_git('HEAD'))
         if plan is None:
