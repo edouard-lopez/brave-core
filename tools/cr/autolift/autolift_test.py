@@ -841,7 +841,7 @@ class PrepareFlowTest(unittest.TestCase):
         run.assert_not_called()
 
     def test_no_lift_and_a_small_recent_rebase_is_not_worth_a_run(self):
-        result, _, run, _ = self._no_lift(base_commits=3)
+        result, _, run, _ = self._no_lift(base_commits=20)
         self.assertEqual(result, autolift.NOT_WORTH_A_RUN)
         run.assert_not_called()
 
@@ -871,15 +871,15 @@ class PrepareFlowTest(unittest.TestCase):
             report,
         )
 
-    def test_a_small_rebase_is_worth_it_a_day_after_the_last(self):
+    def test_a_small_rebase_is_worth_it_12_hours_after_the_last(self):
         result, _, run, _ = self._no_lift(
-            base_commits=1, since_rebase=timedelta(hours=25)
+            base_commits=1, since_rebase=timedelta(hours=13)
         )
         self.assertEqual(result, 0)
         self.assertIn('rebase', run.call_args.args[0])
 
-    def test_four_base_commits_are_worth_a_rebase(self):
-        result, _, run, _ = self._no_lift(base_commits=4)
+    def test_more_than_20_base_commits_are_worth_a_rebase(self):
+        result, _, run, _ = self._no_lift(base_commits=21)
         self.assertEqual(result, 0)
         self.assertIn('rebase', run.call_args.args[0])
 
@@ -907,7 +907,7 @@ class PrepareFlowTest(unittest.TestCase):
             remote_exists=True,
             releases=releases,
             always=False,
-            base_commits=4,
+            base_commits=21,
         )
         self.assertEqual(result, 0)
         self.assertEqual(target, 'none')
@@ -932,7 +932,7 @@ class PrepareFlowTest(unittest.TestCase):
             remote_exists=True,
             releases=releases,
             always=False,
-            base_commits=4,
+            base_commits=21,
         )
         self.assertEqual(result, 0)
         # The run follows the steps without a lift: no Android build.
@@ -2060,19 +2060,22 @@ class RunStepsTest(unittest.TestCase):
 
 class NotWorthARunTest(unittest.TestCase):
     def test_reasons(self):
-        recent, old = timedelta(hours=2), timedelta(days=2)
+        recent, old = timedelta(hours=2), timedelta(hours=13)
         self.assertIsNone(autolift.not_worth_a_run(True, 0, recent))
         self.assertEqual(
             'no lift, and nothing to rebase',
             autolift.not_worth_a_run(False, 0, old),
         )
         self.assertEqual(
-            'no lift, and only 3 base commit(s) to rebase over, 2h after the '
+            'no lift, and only 20 base commit(s) to rebase over, 2h after the '
             'last rebase',
-            autolift.not_worth_a_run(False, 3, recent),
+            autolift.not_worth_a_run(False, 20, recent),
+        )
+        self.assertIsNotNone(
+            autolift.not_worth_a_run(False, 20, timedelta(hours=12))
         )
         self.assertIsNone(autolift.not_worth_a_run(False, 3, old))
-        self.assertIsNone(autolift.not_worth_a_run(False, 4, recent))
+        self.assertIsNone(autolift.not_worth_a_run(False, 21, recent))
         self.assertIsNone(autolift.not_worth_a_run(False, 1, recent, ['DEPS']))
 
     def test_merge_conflicts(self):

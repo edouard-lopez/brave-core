@@ -546,11 +546,11 @@ def _rebased_on(base: Version, head: Version) -> Version | None:
     return _brockit_show(f'--from-ref-value={label}', 'base version:')
 
 
-# Without a lift, a rebase over fewer base commits than this isn't worth a run,
-# unless the branch was last rebased longer than `_STALE_REBASE` ago, or it
+# Without a lift, a rebase over this many base commits or fewer isn't worth a
+# run, unless the branch was last rebased longer than `_STALE_REBASE` ago, or it
 # conflicts with the base.
-_MIN_REBASE_COMMITS = 4
-_STALE_REBASE = timedelta(days=1)
+_MAX_IDLE_BASE_COMMITS = 20
+_STALE_REBASE = timedelta(hours=12)
 # `prepare`'s exit status when the run isn't worth it.
 NOT_WORTH_A_RUN = 3
 
@@ -573,7 +573,7 @@ def not_worth_a_run(
         return 'no lift, and nothing to rebase'
     if conflicts:
         return None
-    if base_commits < _MIN_REBASE_COMMITS and since_rebase < _STALE_REBASE:
+    if base_commits <= _MAX_IDLE_BASE_COMMITS and since_rebase <= _STALE_REBASE:
         hours = since_rebase.total_seconds() / 3600
         return (
             f'no lift, and only {base_commits} base commit(s) to rebase over, '

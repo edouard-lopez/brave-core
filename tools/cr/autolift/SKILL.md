@@ -531,11 +531,11 @@ to, `prepare` says "No lift needed", and the run takes
 rebase. Don't override the target, or lift by hand to `@latest-for-branch` on a
 maintenance branch.
 
-A run with no lift is worth it only for a rebase over 4 or more base commits,
-over any once the branch was last rebased more than a day ago, or over any when
-the branch conflicts with its base (what GitHub shows as conflicts on its pull
-request; `prepare` lists the files). Otherwise `prepare` says "Not worth a lift
-run" and exits 3 without rebasing, and the run carries on as an
+A run with no lift is worth it only for a rebase over more than 20 base commits,
+over any once the branch was last rebased more than 12 hours ago, or over any
+when the branch conflicts with its base (what GitHub shows as conflicts on its
+pull request; `prepare` lists the files). Otherwise `prepare` says "Not worth a
+lift run" and exits 3 without rebasing, and the run carries on as an
 [Autofix run](#autofix-run), from its step 1: the branch's CI is still worth
 checking and acting on.
 
