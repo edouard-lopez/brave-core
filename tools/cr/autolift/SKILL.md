@@ -445,16 +445,17 @@ hand: it prints the branch against `origin/cr<N>`, any rebase, cherry-pick or
 target, the steps the current run has recorded, the latest logs, and the step to
 carry on with.
 
-On a branch with newer `cr` branches above it, the recipe first brings the
-tooling up to date: `sync_tooling.py`, which ships with the recipe, cherry-picks
-the newer branches' culprit-free `tools/cr/`, `build/` and `tools/recipes/`
-commits (without the `M<NNN>.md` trackers), declines those following a Chromium
-change this branch's Chromium lacks, and an agent reconciles what it left for
-judgement. `.autolift/cr<N>/sync-tooling.md` says what was picked, skipped,
-declined and dropped; copy its lists into the report. `prepare` keeps those
-commits, the rebase replays them, and `publish` pushes them with the run's own.
-This document is the synced one. CI runs the recipes from master, so a picked
-recipe change only takes effect once merged there.
+On a branch with newer `cr` branches above it, a run that will lift or rebase
+(`autolift.py plan`) first brings the tooling up to date; an autofix run, or one
+not worth it, doesn't. `sync_tooling.py`, which ships with the recipe,
+cherry-picks the newer branches' culprit-free `tools/cr/`, `build/` and
+`tools/recipes/` commits (without the `M<NNN>.md` trackers), declines those
+following a Chromium change this branch's Chromium lacks, and an agent
+reconciles what it left for judgement. `.autolift/cr<N>/sync-tooling.md` says
+what was picked, skipped, declined and dropped; copy its lists into the report.
+`prepare` keeps those commits, the rebase replays them, and `publish` pushes
+them with the run's own. This document is the synced one. CI runs the recipes
+from master, so a picked recipe change only takes effect once merged there.
 
 Once a step is done, record it with
 `vpython3 tools/cr/autolift/autolift.py step <n> --done '<outcome>'`, the

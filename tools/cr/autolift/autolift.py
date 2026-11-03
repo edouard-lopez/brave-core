@@ -16,11 +16,16 @@ Subcommands:
         `@latest-for-branch`, until origin/cr<N+1> exists; then it is the
         newest beta or stable release of M<N> newer than cr<N>, if there is
         one. For a new milestone with no origin/cr<N> yet, creates cr<N> from
-        the base instead, and leaves the rebase out. With no lift, and fewer
-        than 4 base commits to rebase over within a day of the last rebase, it
+        the base instead, and leaves the rebase out. With no lift, and 20 base
+        commits or fewer to rebase over within 12 hours of the last rebase, it
         exits 3 before rebasing, as a lift run isn't worth it (the run turns to
         an autofix run instead), unless `--always` or the branch conflicts
         with the base.
+    plan N
+        Says, without changing anything, whether a run of the checked-out
+        cr<N> would lift, only rebase, or isn't worth it (exit 3), as
+        `prepare` would decide. The recipe syncs the tooling only for a run
+        that lifts or rebases.
     lift [--continue]
         Runs `brockit lift --with-github` (in infra mode) to the target
         `prepare` picked for the current cr<N> branch, keeps the log under
@@ -803,6 +808,137 @@ def _cmd_autofix(args: argparse.Namespace) -> int:
     return 0
 
 
+class RunPlan:
+    """Whether a run of cr<N> lifts, and whether it is worth running at all.
+
+    Read from HEAD, the branch as checked out, and its base, changing
+    nothing: `prepare` acts on it, and `plan` only reports it, so that the
+    recipe can skip the tooling sync of a run that won't lift or rebase.
+    """
+
+    def __init__(self, milestone: int, base: str, exists: bool):
+        self.milestone = milestone
+        self.base = base
+        self.exists = exists
+        self.branch = f'cr{milestone}'
+        # What `prepare` reports, added to as the plan is made.
+        self.summary = ''
+        # The `--to` of the lift, or None for none.
+        self.lift_to: str | None = None
+        # Whether a run without a lift regenerates after its rebase.
+        self.regen = False
+
+    def decide_lift(self) -> bool:
+        """Sets `lift_to` (and `regen` without a lift). False, having said
+        why, when that can't be told."""
+        branch = self.branch
+        # Once cr<N+1> exists, cr<N> is no longer the head branch, and only
+        # follows its milestone's beta and stable releases.
+        maintenance = self.exists and _remote_branch_exists(
+            f'cr{self.milestone + 1}'
+        )
+        current = Version.from_git('HEAD')
+        if maintenance:
+            beta = _chromium_version('@latest-beta')
+            stable = _chromium_version('@latest-stable')
+            if beta is None or stable is None:
+                print(
+                    'Could not resolve @latest-beta and @latest-stable, so '
+                    f'whether {branch} needs a lift is unknown.'
+                )
+                return False
+            target = maintenance_target(self.milestone, current, [beta, stable])
+            self.lift_to = str(target) if target else None
+            base_version = Version.from_git(self.base)
+            self.summary += (
+                f'- Maintenance run: origin/cr{self.milestone + 1} exists, so '
+                f'{branch} lifts only to a beta or stable release of '
+                f'M{self.milestone}.\n'
+                f'- {branch} is on {current}; @latest-beta is {beta}, '
+                f'@latest-stable is {stable}.\n'
+            )
+            if target:
+                # The ranges the run will have once lifted, rather than now.
+                self.summary += (
+                    f'- Lift needed: to {target}.\n'
+                    f'- Bump range: {current}..{target}\n'
+                    f'- Branch range, once lifted: {base_version}..{target}'
+                )
+        else:
+            self.lift_to = '@latest-for-branch'
+            tag = _chromium_version(f'@latest-m{self.milestone}')
+            self.summary += (
+                f'- Target tag (@latest-m{self.milestone}): '
+                f'{tag or "unknown"}.\n'
+            )
+            # A head branch already on its milestone's latest tag lifts
+            # nothing, nor does it lift to a minor bump of its tag (only
+            # PATCH moves): not worth a run's hassle until the build number
+            # moves too.
+            if (
+                self.exists
+                and tag is not None
+                and tag.parts[:3] == current.parts[:3]
+            ):
+                self.lift_to = None
+                if tag != current:
+                    self.summary += (
+                        f'- {tag} is only a minor bump of {current}: no lift.\n'
+                    )
+        if self.exists and not self.lift_to:
+            plan = _no_lift_plan(self.base, current)
+            if plan is None:
+                print(f'Could not find the base version {branch} starts from.')
+                return False
+            self.regen, plan_summary = plan
+            self.summary += plan_summary
+        return True
+
+    def not_worth(self) -> str | None:
+        """Why the run isn't worth it, after `decide_lift`, if it isn't."""
+        lifts = bool(self.lift_to)
+        base_commits = int(
+            repository.brave.run_git(
+                'rev-list', '--count', f'HEAD..{self.base}'
+            )
+        )
+        conflicts = (
+            merge_conflicts(self.base) if base_commits and not lifts else []
+        )
+        if conflicts:
+            self.summary += (
+                f'\n- {self.branch} conflicts with {self.base} in '
+                f'{len(conflicts)} file(s), so it is rebased however little it '
+                f'is behind: {", ".join(conflicts)}.'
+            )
+        return not_worth_a_run(
+            lifts, base_commits, _since_rebase(self.base), conflicts
+        )
+
+
+def _cmd_plan(args: argparse.Namespace) -> int:
+    brave = repository.brave
+    branch = f'cr{args.milestone}'
+    if not _remote_branch_exists(branch):
+        print(f'{branch} is new: its first lift is worth a run.')
+        return 0
+    brave.run_git('fetch', 'origin', 'master', branch)
+    base = choose_base(args.milestone, Version.from_git('origin/master').major)
+    if base != 'origin/master':
+        brave.run_git('fetch', 'origin', base.removeprefix('origin/'))
+    plan = RunPlan(args.milestone, base, exists=True)
+    if not plan.decide_lift():
+        return 1
+    if plan.lift_to:
+        print(f'Lift, to {plan.lift_to}.')
+        return 0
+    if reason := plan.not_worth():
+        print(f'Not worth a lift run: {reason}.')
+        return NOT_WORTH_A_RUN
+    print('Rebase, without a lift.')
+    return 0
+
+
 def _cmd_prepare(args: argparse.Namespace) -> int:
     brave = repository.brave
     branch = f'cr{args.milestone}'
@@ -873,80 +1009,20 @@ def _cmd_prepare(args: argparse.Namespace) -> int:
         f'- Upstream (base): {base}.\n'
     )
 
-    # Once cr<N+1> exists, cr<N> is no longer the head branch, and only
-    # follows its milestone's beta and stable releases.
-    maintenance = exists and _remote_branch_exists(f'cr{args.milestone + 1}')
-    regen = False
-    tag = None
-    if maintenance:
-        current = Version.from_git('HEAD')
-        beta = _chromium_version('@latest-beta')
-        stable = _chromium_version('@latest-stable')
-        if beta is None or stable is None:
-            print(
-                'Could not resolve @latest-beta and @latest-stable, so whether '
-                f'{branch} needs a lift is unknown.'
-            )
-            return 1
-        target = maintenance_target(args.milestone, current, [beta, stable])
-        lift_to = str(target) if target else None
-        base_version = Version.from_git(base)
-        summary += (
-            f'- Maintenance run: origin/cr{args.milestone + 1} exists, so '
-            f'{branch} lifts only to a beta or stable release of '
-            f'M{args.milestone}.\n'
-            f'- {branch} is on {current}; @latest-beta is {beta}, '
-            f'@latest-stable is {stable}.\n'
-        )
-        if target:
-            # The ranges the run will have once lifted, rather than now.
-            summary += (
-                f'- Lift needed: to {target}.\n'
-                f'- Bump range: {current}..{target}\n'
-                f'- Branch range, once lifted: {base_version}..{target}'
-            )
-    else:
-        lift_to = '@latest-for-branch'
-        tag = _chromium_version(f'@latest-m{args.milestone}')
-        summary += (
-            f'- Target tag (@latest-m{args.milestone}): {tag or "unknown"}.\n'
-        )
-        # A head branch already on its milestone's latest tag lifts nothing,
-        # nor does it lift to a minor bump of its tag (only PATCH moves): not
-        # worth a run's hassle until the build number moves too.
-        current = Version.from_git('HEAD')
-        if exists and tag is not None and tag.parts[:3] == current.parts[:3]:
-            lift_to = None
-            if tag != current:
-                summary += (
-                    f'- {tag} is only a minor bump of {current}: no lift.\n'
-                )
-    if exists and not lift_to:
-        plan = _no_lift_plan(base, Version.from_git('HEAD'))
-        if plan is None:
-            print(f'Could not find the base version {branch} starts from.')
-            return 1
-        regen, plan_summary = plan
-        summary += plan_summary
-    summary = summary.rstrip('\n')
+    plan = RunPlan(args.milestone, base, exists)
+    plan.summary = summary
+    if not plan.decide_lift():
+        return 1
+    lift_to, regen = plan.lift_to, plan.regen
+    summary = plan.summary.rstrip('\n')
     _lift_target_file(args.milestone).write_text(
         f'{lift_to or "none"}\n', encoding='utf-8'
     )
     if exists and not args.always:
-        lifts = bool(lift_to)
-        base_commits = int(
-            brave.run_git('rev-list', '--count', f'HEAD..{base}')
-        )
-        conflicts = merge_conflicts(base) if base_commits and not lifts else []
-        if conflicts:
-            summary += (
-                f'\n- {branch} conflicts with {base} in {len(conflicts)} '
-                f'file(s), so it is rebased however little it is behind: '
-                f'{", ".join(conflicts)}.'
-            )
-        if reason := not_worth_a_run(
-            lifts, base_commits, _since_rebase(base), conflicts
-        ):
+        plan.summary = summary
+        reason = plan.not_worth()
+        summary = plan.summary
+        if reason:
             summary += (
                 f'\n- Not worth a lift run: {reason}. No rebase: carry on '
                 'with an autofix run of the CI; `--always` runs the lift '
@@ -2405,6 +2481,13 @@ def main() -> int:
         'has commits origin lacks (discards them).',
     )
     prepare.set_defaults(func=_cmd_prepare)
+
+    plan = subparsers.add_parser(
+        'plan',
+        help='Say whether a run of cr<N> would lift, rebase, or neither.',
+    )
+    plan.add_argument('milestone', type=int, help='e.g. 158')
+    plan.set_defaults(func=_cmd_plan)
 
     lift = subparsers.add_parser(
         'lift',

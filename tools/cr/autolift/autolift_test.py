@@ -644,6 +644,7 @@ class PrepareFlowTest(unittest.TestCase):
         unpushed: int = 0,
         synced_head: str | None = None,
         conflicts: tuple[str, ...] = (),
+        command=autolift._cmd_prepare,
     ):
         calls = []
         remotes = {f'cr{milestone}': remote_exists}
@@ -724,7 +725,7 @@ class PrepareFlowTest(unittest.TestCase):
             run.side_effect = lambda cmd, **_: mock.Mock(
                 returncode=int(sync_fails and cmd[:2] == ['pnpm', 'run'])
             )
-            result = autolift._cmd_prepare(args)
+            result = command(args)
         target = run_root / f'cr{milestone}' / 'lift-target'
         if not target.exists():
             return result, calls, run, None
@@ -923,6 +924,42 @@ class PrepareFlowTest(unittest.TestCase):
         result, _, _, target = self._run(158, remote_exists=True)
         self.assertEqual(result, 0)
         self.assertEqual(target, '@latest-for-branch')
+
+    def _plan(self, **kwargs):
+        result, calls, run, _ = self._run(
+            158, remote_exists=True, command=autolift._cmd_plan, **kwargs
+        )
+        # It only reads: no reset, upstream, rebase or lift target.
+        self.assertFalse(
+            any(c[0] in ('checkout', 'branch', 'reset') for c in calls)
+        )
+        run.assert_not_called()
+        self.assertFalse((self.run_root / 'cr158' / 'lift-target').exists())
+        return result
+
+    def test_plan_says_a_lift_is_worth_a_run(self):
+        self.assertEqual(self._plan(), 0)
+
+    def test_plan_says_a_minor_bump_is_not_worth_a_run(self):
+        releases = dict(self._RELEASES)
+        releases['@latest-m158'] = autolift.Version('158.0.8127.7')
+        self.assertEqual(
+            self._plan(releases=releases, base_commits=20),
+            autolift.NOT_WORTH_A_RUN,
+        )
+
+    def test_plan_says_a_rebase_without_a_lift_is_worth_a_run(self):
+        releases = dict(self._RELEASES)
+        releases['@latest-m158'] = autolift.Version('158.0.8127.7')
+        self.assertEqual(self._plan(releases=releases, base_commits=21), 0)
+
+    def test_plan_says_a_new_milestone_is_worth_a_run(self):
+        result, calls, run, _ = self._run(
+            159, remote_exists=False, command=autolift._cmd_plan
+        )
+        self.assertEqual(result, 0)
+        self.assertFalse(any(c[0] == 'fetch' for c in calls))
+        run.assert_not_called()
 
     def test_head_branch_on_its_latest_tag_only_rebases(self):
         releases = dict(self._RELEASES)
