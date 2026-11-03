@@ -20,6 +20,11 @@ public class BraveProfileUtils {
      * <p>Replaces upstream's OriginalProfileSupplier, removed as unused in
      * https://crrev.com/a1ca906126779. Unlike that class, this handles the case where the profile
      * already exists, which ProfileManager observers are never notified about.
+     *
+     * <p>New callers are banned by PRESUBMIT: resolving the single regular profile will break once
+     * Chromium enables multi-profile on Android. Pass the Profile in explicitly, or key the state
+     * per Profile. Process-wide startup entry points have to be allowlisted in brave/PRESUBMIT.py.
+     * See https://github.com/brave/brave-browser/issues/60462.
      */
     public static void onRegularProfileAvailable(Callback<Profile> callback) {
         ThreadUtils.assertOnUiThread();
