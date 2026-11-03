@@ -31,9 +31,9 @@ master, so they take effect only once merged there.
 
 It ships with the `cr/autolift` recipe, rather than being read from a cr
 branch, so that CI only runs code from master. It uses only the standard
-library and git, and works on the repository it is given:
+library and git, and works on the brave-core checkout it runs in:
 
-    python3 sync_tooling.py --repo src/brave --milestone 158
+    python3 sync_tooling.py --milestone 158
 """
 
 from __future__ import annotations
@@ -499,11 +499,10 @@ def format_outcome(outcome: Outcome, milestone: int, rerun: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('--repo', type=Path, required=True)
     parser.add_argument('--milestone', type=int, required=True)
     parser.add_argument('--remote', default='origin')
     args = parser.parse_args()
-    repo = args.repo.resolve()
+    repo = Path.cwd()
     sync = SyncTooling(repo, args.milestone, args.remote)
     try:
         outcome = sync.run()
@@ -516,8 +515,6 @@ def main() -> int:
         [
             'python3',
             str(Path(__file__).resolve()),
-            '--repo',
-            str(repo),
             '--milestone',
             str(args.milestone),
         ]

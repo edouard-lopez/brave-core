@@ -232,16 +232,11 @@ class SyncToolingTest(unittest.TestCase):
         self.assertEqual((), (*outcome.picked, *outcome.pending))
 
     def _main(self) -> int:
-        argv = [
-            'sync_tooling.py',
-            '--repo',
-            str(self.work),
-            '--milestone',
-            '158',
-        ]
+        argv = ['sync_tooling.py', '--milestone', '158']
         with (
             mock.patch.dict('os.environ', {**_ENV, 'HOME': str(self.root)}),
             mock.patch('sys.argv', argv),
+            contextlib.chdir(self.work),
             contextlib.redirect_stdout(io.StringIO()),
         ):
             return sync_tooling.main()

@@ -124,19 +124,16 @@ def _latest_milestone(api: DEPS) -> int:
 def _sync_tooling(
     api: DEPS,
     milestone: int,
-    root,
     run_dir,
     add_dirs,
     allowed_tools,
 ) -> None:
     """Cherry-picks the newer cr branches' tooling onto cr<milestone>, with an
     agent reconciling what the script leaves for judgement, before the lift
-    reads its skill."""
+    reads its skill. Runs in the checkout, from the brave-core layout."""
     cmd = [
         'python3',
         api.resource('sync_tooling.py'),
-        '--repo',
-        root,
         '--milestone',
         str(milestone),
     ]
@@ -199,7 +196,6 @@ def RunSteps(api: DEPS, properties: InputProperties) -> None:
                 _sync_tooling(
                     api,
                     milestone,
-                    root,
                     run_dir,
                     add_dirs,
                     allowed_tools,

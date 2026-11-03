@@ -246,8 +246,6 @@
     "cmd": [
       "python3",
       "RECIPE[cr/autolift].resources/sync_tooling.py",
-      "--repo",
-      "[WORKSPACE]/b/src/brave",
       "--milestone",
       "158"
     ],
