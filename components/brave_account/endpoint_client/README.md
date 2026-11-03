@@ -183,6 +183,10 @@ Client<LoginInit>::Send(
 - the response body fails to parse into the declared type: JSON bodies via
   `base::JSONReader` and `FromValue()`, Protobuf bodies via `ParseFromString()`.
 
+Redirects are not followed: the network service fails a redirect with
+`net::ERR_FAILED`, so request headers (e.g. bearer tokens) and bodies are not
+sent to another URL.
+
 #### Per-request options
 
 `network_traffic_annotation_tag` is required (only tests may leave it unset).
