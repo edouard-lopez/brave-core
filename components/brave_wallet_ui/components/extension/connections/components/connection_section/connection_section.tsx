@@ -12,7 +12,6 @@ import { BraveWallet } from '../../../../../constants/types'
 // Queries
 import {
   useGetActiveOriginConnectedAccountIdsQuery,
-  useGetActivePanelOriginQuery,
   useGetNetworkForAccountOnActiveOriginQuery,
   useGetNetworksQuery,
   useRemoveSitePermissionMutation,
@@ -57,10 +56,11 @@ import { Column, Row, Text } from '../../../../shared/style'
 interface Props {
   coin: BraveWallet.CoinType
   selectedAccountId: BraveWallet.AccountId | undefined
+  activeOrigin: BraveWallet.OriginInfo
 }
 
 export const ConnectionSection = (props: Props) => {
-  const { coin, selectedAccountId } = props
+  const { coin, selectedAccountId, activeOrigin } = props
 
   // State
   const [isPermissionDenied, setIsPermissionDenied] =
@@ -89,8 +89,6 @@ export const ConnectionSection = (props: Props) => {
   const [setSelectedAccount] = useSetSelectedAccountMutation()
 
   // Queries
-  const { data: activeOrigin = { eTldPlusOne: '', originSpec: '' } } =
-    useGetActivePanelOriginQuery()
   const { account: selectedAccount } = useAccountQuery(
     effectiveSelectedAccountId,
   )
@@ -98,7 +96,7 @@ export const ConnectionSection = (props: Props) => {
   const { data: networkForAccount } =
     useGetNetworkForAccountOnActiveOriginQuery({
       accountId: effectiveSelectedAccountId,
-      activeOriginSpec: activeOrigin.originSpec,
+      activeOriginSpec: activeOrigin?.originSpec,
     })
   const { data: networks = [] } = useGetNetworksQuery()
   const firstNetworkByCoin = networks.filter(
