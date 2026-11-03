@@ -87,7 +87,5 @@ class ActionsCi:
     def rerun(self, url: str) -> str:
         """Reruns the job at `url`, and the jobs that depend on it."""
         repo, job_id = self._job(url)
-        self._gh.api(
-            f'repos/{repo}/actions/jobs/{job_id}/rerun', method='POST'
-        )
+        self._gh.api(f'repos/{repo}/actions/jobs/{job_id}/rerun', method='POST')
         return f'Rerunning GitHub Actions job {job_id} of {repo}.'
