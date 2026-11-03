@@ -244,24 +244,6 @@
   },
   {
     "cmd": [
-      "python3",
-      "RECIPE[cr/autolift].resources/sync_tooling.py",
-      "--milestone",
-      "158"
-    ],
-    "cwd": "[WORKSPACE]/b/src/brave",
-    "env": {
-      "CHROME_HEADLESS": "1"
-    },
-    "env_prefixes": {
-      "PATH": [
-        "[WORKSPACE]/b/src/brave/tools/cr/bootstrap"
-      ]
-    },
-    "name": "sync tooling"
-  },
-  {
-    "cmd": [
       "[WORKSPACE]/b/src/third_party/depot_tools/vpython3",
       "RECIPE_MODULE[claude_cli]/resources/run_claude.py",
       "--log",

@@ -244,6 +244,24 @@
   },
   {
     "cmd": [
+      "vpython3",
+      "tools/cr/autolift/autolift.py",
+      "plan",
+      "158"
+    ],
+    "cwd": "[WORKSPACE]/b/src/brave",
+    "env": {
+      "CHROME_HEADLESS": "1"
+    },
+    "env_prefixes": {
+      "PATH": [
+        "[WORKSPACE]/b/src/brave/tools/cr/bootstrap"
+      ]
+    },
+    "name": "plan"
+  },
+  {
+    "cmd": [
       "python3",
       "RECIPE[cr/autolift].resources/sync_tooling.py",
       "--milestone",

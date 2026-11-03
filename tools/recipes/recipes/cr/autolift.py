@@ -51,6 +51,8 @@ section describes, and list each pending commit you dropped, and why, at the \
 end of {report}."""
 
 _SYNC_PENDING = 2
+# `autolift.py plan`'s exit status for a run that neither lifts nor rebases.
+_NOT_WORTH_A_RUN = 3
 
 _RESUME_PROMPT = """\
 Resume the lift of cr{milestone}, which an earlier run of {skill} stopped \
@@ -119,6 +121,17 @@ def _latest_milestone(api: DEPS) -> int:
     if not milestones:
         raise RuntimeError(f'no cr<N> branch on {BRAVE_CORE_URL}')
     return max(milestones)
+
+
+def _lifts_or_rebases(api: DEPS, milestone: int) -> bool:
+    """Whether the run will lift or rebase, as `prepare` decides it, which is
+    when its tooling is worth syncing. A plan that fails syncs all the same."""
+    result = api.step(
+        'plan',
+        ['vpython3', 'tools/cr/autolift/autolift.py', 'plan', str(milestone)],
+        check=False,
+    )
+    return result.retcode != _NOT_WORTH_A_RUN
 
 
 def _sync_tooling(
@@ -192,7 +205,12 @@ def RunSteps(api: DEPS, properties: InputProperties) -> None:
     allowed_tools = [f'Edit(/{checkout}/**)', f'Write(/{checkout}/**)']
     with api.brave_core_checkout.brave_core_layout():
         try:
-            if not properties.resume and newest > milestone:
+            if (
+                not properties.resume
+                and not properties.autofix
+                and newest > milestone
+                and _lifts_or_rebases(api, milestone)
+            ):
                 _sync_tooling(
                     api,
                     milestone,
@@ -267,7 +285,8 @@ def GenTests(api: TEST_DEPS):
         api.post_process(post_process.DropExpectation),
     )
 
-    # An older branch first syncs its tooling with the newer ones.
+    # An older branch that will lift or rebase first syncs its tooling with
+    # the newer ones.
     yield api.test(
         'sync tooling',
         api.brave_core_checkout.with_git_cache(),
@@ -280,12 +299,52 @@ def GenTests(api: TEST_DEPS):
         ),
         api.post_process(
             post_process.StepCommandContains,
+            'plan',
+            ['tools/cr/autolift/autolift.py', 'plan', '158'],
+        ),
+        api.post_process(
+            post_process.StepCommandContains,
             'sync tooling',
             ['--milestone', '158'],
         ),
         api.post_process(post_process.DoesNotRun, 'sync tooling (judgement)'),
         api.post_process(post_process.MustRun, 'autolift'),
         api.post_process(post_process.StatusSuccess),
+    )
+
+    # A run that will neither lift nor rebase leaves the tooling as it is.
+    yield api.test(
+        'sync tooling not worth it',
+        api.brave_core_checkout.with_git_cache(),
+        api.brave_core_checkout.git_cache_populated(),
+        api.chromium_checkout.existing_checkout(),
+        api.properties(milestone=158),
+        api.step_data(
+            'find latest cr branch',
+            stdout=api.raw_io.output_text(_ls_remote),
+        ),
+        api.step_data('plan', retcode=_NOT_WORTH_A_RUN),
+        api.post_process(post_process.DoesNotRun, 'sync tooling'),
+        api.post_process(post_process.MustRun, 'autolift'),
+        api.post_process(post_process.StatusSuccess),
+        api.post_process(post_process.DropExpectation),
+    )
+
+    # A plan that fails can't tell, so the tooling is synced as before.
+    yield api.test(
+        'sync tooling plan fails',
+        api.brave_core_checkout.with_git_cache(),
+        api.brave_core_checkout.git_cache_populated(),
+        api.chromium_checkout.existing_checkout(),
+        api.properties(milestone=158),
+        api.step_data(
+            'find latest cr branch',
+            stdout=api.raw_io.output_text(_ls_remote),
+        ),
+        api.step_data('plan', retcode=1),
+        api.post_process(post_process.MustRun, 'sync tooling'),
+        api.post_process(post_process.StatusSuccess),
+        api.post_process(post_process.DropExpectation),
     )
 
     # Commits the script left for judgement are reconciled by an agent first.
@@ -363,8 +422,8 @@ def GenTests(api: TEST_DEPS):
         api.post_process(post_process.StatusSuccess),
     )
 
-    # An autofix run only fixes the pull request's CI, with the newest
-    # branch's tooling, which it pushes with its fixups.
+    # An autofix run only fixes the pull request's CI: cheap, so without a
+    # plan or a tooling sync.
     yield api.test(
         'autofix',
         api.brave_core_checkout.with_git_cache(),
@@ -375,7 +434,8 @@ def GenTests(api: TEST_DEPS):
             'find latest cr branch',
             stdout=api.raw_io.output_text(_ls_remote),
         ),
-        api.post_process(post_process.MustRun, 'sync tooling'),
+        api.post_process(post_process.DoesNotRun, 'plan'),
+        api.post_process(post_process.DoesNotRun, 'sync tooling'),
         api.claude_cli.prompt_matches(
             'autolift', rf'Fix what fails in the CI of cr158\b.*{SKILL}.*'
         ),
