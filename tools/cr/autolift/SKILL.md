@@ -1199,9 +1199,10 @@ report, not with `autolift.py step`.
    some failed. It prints a line per failed check and writes the detail to
    `.autolift/cr<N>/ci-failures.md`: the builds behind each check (a TeamCity
    aggregate's failed dependencies, a Jenkins run's first failed stage and its
-   unstable test stages), with their problems, failed tests and the end of the
-   failed step's log. Read that file, not the CI logs, and the logs only for
-   what it cuts. `vpython3 tools/cr/ci/cli.py checks <N>` lists every check.
+   unstable test stages, a GitHub Actions job's failed steps), with their
+   problems, failed tests and the end of the failed step's log. Read that file,
+   not the CI logs, and the logs only for what it cuts.
+   `vpython3 tools/cr/ci/cli.py checks <N>` lists every check.
 3. Triage each failed build. Its `infra`, `tests` or `build` label is a hint
    from the log; check it against the log tail.
    - **Infra** (the CI machine or its workspace: disk, agent, a workspace built
