@@ -304,8 +304,9 @@ def GenTests(api: TEST_DEPS):
             post_process.StepCommandContains,
             'write .env',
             [
-                'is_asan=true\nlean_sync=true\nrbe_service=rbe.ba.brave.com:443\n'
-                'siso_cache_dir=/b/siso\nuse_remoteexec=true\n'
+                'brave_extra_gn_gen_opts=--check\nis_asan=true\nlean_sync=true\n'
+                'rbe_service=rbe.ba.brave.com:443\nsiso_cache_dir=/b/siso\n'
+                'use_remoteexec=true\n'
             ],
         ),
         api.post_process(post_process.StatusSuccess),
@@ -321,8 +322,8 @@ def GenTests(api: TEST_DEPS):
             post_process.StepCommandContains,
             'write .env',
             [
-                'lean_sync=true\nrbe_service=rbe.ba.brave.com:443\n'
-                'use_remoteexec=true\n'
+                'brave_extra_gn_gen_opts=--check\nlean_sync=true\n'
+                'rbe_service=rbe.ba.brave.com:443\nuse_remoteexec=true\n'
             ],
         ),
         api.post_process(post_process.StatusSuccess),

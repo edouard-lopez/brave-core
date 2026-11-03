@@ -52,5 +52,8 @@ def brave(c):
     # Every `pnpm run init`/`sync` reads it, the recipe's and those a run makes
     # later alike.
     c.dotenv['lean_sync'] = 'true'
+    # `gn gen --check` on every build, so that a header dependency missing from
+    # GN fails it rather than only `gn check` later.
+    c.dotenv['brave_extra_gn_gen_opts'] = '--check'
     if c.USE_REMOTEEXEC:
         rbe(c)

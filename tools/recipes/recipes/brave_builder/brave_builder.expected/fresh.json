@@ -366,7 +366,7 @@
       "--json-output",
       "/path/to/tmp/json",
       "copy",
-      "lean_sync=true\nrbe_service=rbe.ba.brave.com:443\nsiso_cache_dir=/b/siso\nuse_remoteexec=true\n",
+      "brave_extra_gn_gen_opts=--check\nlean_sync=true\nrbe_service=rbe.ba.brave.com:443\nsiso_cache_dir=/b/siso\nuse_remoteexec=true\n",
       "[WORKSPACE]/b/src/brave/.env"
     ],
     "name": "write .env"
