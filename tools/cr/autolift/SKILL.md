@@ -1230,14 +1230,17 @@ report, not with `autolift.py step`.
      into a `TEST_P`, or added a subclass suite, and the test Brave disabled on
      purpose runs again (cr159: `ProfileReportGeneratorTest.SignedInProfile`
      became `SyncingProfile`, leaving `unit_tests.filter:933` naming the old
-     test). Then retarget the entry at the new name, as the tracker's task says,
-     rather than adding one beside it, and tick that task. A test whose suite
-     was filtered before is filtered again under its new name. With no lead,
-     find why it fails before filtering it, and say why in the commit body. Act
-     only on the tests CI reported: the tracker's other filter tasks wait for
-     the lift, or for CI to fail on them. Unlike the other tracked issues, which
-     the run leaves alone (see [Scope](#scope)), these are fixed: the tracker's
-     task is the fix.
+     test). A parameter suffix can be an enum-set bitstring, which shrinks when
+     upstream drops an enum value, with no tracker lead (cr158: `75b7b36f86d9`
+     turned `SetCookieFromStringCrossOrigin/SCRIPT_000100` into `_00010`; check
+     the suite's `INSTANTIATE_TEST_SUITE_P` name generator). Then retarget the
+     entry at the new name, as the tracker's task says, rather than adding one
+     beside it, and tick that task. A test whose suite was filtered before is
+     filtered again under its new name. With no lead, find why it fails before
+     filtering it, and say why in the commit body. Act only on the tests CI
+     reported: the tracker's other filter tasks wait for the lift, or for CI to
+     fail on them. Unlike the other tracked issues, which the run leaves alone
+     (see [Scope](#scope)), these are fixed: the tracker's task is the fix.
    - **Build** (a compile, `gn`, lint or storybook step): reproduce it with the
      narrowest local target, with the flags of [step 3](#3-linux-build)
      (`pnpm run build-storybook` for storybook), and fix it. Build Android, with
@@ -1397,6 +1400,12 @@ headers that lost the include
   `cipd describe <package> -version latest`. Check the package layout with
   `cipd export` into a scratch directory. A new dependency source is a
   `--tagged=WIP` decision.
+- **Windows-only `tools/cr` test failures**: a bare `Path.write_text()` writes
+  CRLF there, which patch generation without `--ignore-space-at-eol` turns into
+  whole-file diffs (cr158: `patchfile_test.test_apply_clean` conflicting).
+  Reproduce on Linux with a scratch script that defaults `write_text`'s
+  `newline` to `'\r\n'`, run with
+  `vpython3 -vpython-spec tools/cr/vpython.toml`, and pass `newline='\n'`.
 - **Stale Brave workarounds**: when an upstream change fixes what a Brave
   workaround worked around, the workaround can become the bug. cr158: a `dex.py`
   plaster kept the WireGuard prebuilt out of intermediate dexing because D8
