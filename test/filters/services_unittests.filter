@@ -68,7 +68,6 @@
 -StorageAccessHeaderNetworkContextParameterizedTest.RetryABAWithResourceRequestOptIn/*
 -StorageAccessHeaderNetworkContextParameterizedTest.RetryAfterInactive/1
 -StorageAccessHeaderNetworkContextTest.OptedInViaResourceRequest
--StorageAccessHeaderNetworkContextTest.RequestHeader_Active_TopLevelStorageAccess
 -StorageAccessHeaderRedirectNetworkContextTest.RetryThenRedirect/*
 
 # These tests crash because net::TestCookieAccessDelegate does not override

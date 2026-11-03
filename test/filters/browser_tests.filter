@@ -2045,10 +2045,6 @@
 # This test fails because we show brave://welcome page on first run
 -StartupBrowserCreatorTriggeredResetFirstRunTest.TestTriggeredResetDoesNotShowWithFirstRunURLs
 
-# These tests fail because we change the default for TOP_LEVEL_STORAGE_ACCESS
-# to CONTENT_SETTING_BLOCK.
--TopLevelStorageExemptionReasonMetricTest.TestMetricResults/*
-
 # This seems to be an upstream bug. This test crashes in
 # extensions::WebViewGuest::FrameNameChanged. The crash happens because the JS
 # in chrome/test/data/extensions/platform_apps/web_view/shim/guest_noopener.html
