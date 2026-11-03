@@ -1,5 +1,5 @@
 diff --git a/chrome/browser/resources/settings/search_page/search_page.ts b/chrome/browser/resources/settings/search_page/search_page.ts
-index 4ff134a9d81f2c6562a35fab51d077de2f9ee03c..e8b0dc4a418ae3b5a34ba9c2b805c9cdb9e8b409 100644
+index 03c684f4ba621b16798a98a2d6d535c878921493..e8429712ac8ad90081c1f5a8da15941ba1c704b1 100644
 --- a/chrome/browser/resources/settings/search_page/search_page.ts
 +++ b/chrome/browser/resources/settings/search_page/search_page.ts
 @@ -267,4 +267,3 @@ declare global {

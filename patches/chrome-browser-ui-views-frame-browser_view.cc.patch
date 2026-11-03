@@ -1,5 +1,5 @@
 diff --git a/chrome/browser/ui/views/frame/browser_view.cc b/chrome/browser/ui/views/frame/browser_view.cc
-index 52141b2abc7b2b14d21469cd2f288e765e1a2f21..16d608d6ae13b7d3da3786832fdc6ef00bb3abc7 100644
+index 52e357fc5bd8a9bd4847b9f6e58e639530373f40..650263c15b0e5196a061e6aba5613c42da5065ba 100644
 --- a/chrome/browser/ui/views/frame/browser_view.cc
 +++ b/chrome/browser/ui/views/frame/browser_view.cc
 @@ -778,6 +778,9 @@ class BrowserView::ExclusiveAccessContextImpl
@@ -57,7 +57,7 @@ index 52141b2abc7b2b14d21469cd2f288e765e1a2f21..16d608d6ae13b7d3da3786832fdc6ef0
    // Update various elements that are interested in knowing the current
    // WebContents.
  
-@@ -5405,7 +5418,7 @@ bool BrowserView::MaybeShowBookmarkBar(WebContents* contents) {
+@@ -5406,7 +5419,7 @@ bool BrowserView::MaybeShowBookmarkBar(WebContents* contents) {
    }
  
    if (!bookmark_bar_view_) {

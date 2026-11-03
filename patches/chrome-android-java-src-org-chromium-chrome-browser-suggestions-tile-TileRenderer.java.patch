@@ -1,8 +1,8 @@
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/suggestions/tile/TileRenderer.java b/chrome/android/java/src/org/chromium/chrome/browser/suggestions/tile/TileRenderer.java
-index 57326eff8e354d569434406b4d1058c9b0674856..503b65d4452d1cfe085bd4ee1c4c5330474fdaee 100644
+index 0353775946be04171fe1b68c5ce9451a52e139d9..2854b0676866c5c968e5f8d94c7f126fc2b7909d 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/suggestions/tile/TileRenderer.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/suggestions/tile/TileRenderer.java
-@@ -374,6 +374,11 @@ public class TileRenderer {
+@@ -373,6 +373,11 @@ public class TileRenderer {
          tileView.setOnKeyListener(
                  (View view, int keyCode, KeyEvent event) ->
                          TileUtils.isCustomTileSwapKeyCombo(keyCode, event));

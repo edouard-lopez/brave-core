@@ -1,8 +1,8 @@
 diff --git a/components/autofill/core/browser/foundations/autofill_client.h b/components/autofill/core/browser/foundations/autofill_client.h
-index bdd6a672dd1349044d18b0f113bad42bfbc68ad8..319112ec0cf6e8e8c52b065b4dc5834c3974592f 100644
+index bc3885abfe5893eca5f40be4c277499ad8722c42..d25e6f325cf7a9d84757691e71a323f14b24d8b0 100644
 --- a/components/autofill/core/browser/foundations/autofill_client.h
 +++ b/components/autofill/core/browser/foundations/autofill_client.h
-@@ -1054,6 +1054,12 @@ class AutofillClient {
+@@ -1056,6 +1056,12 @@ class AutofillClient {
    // Returns whether the client uses platform-native autofill rather than
    // Chrome's built-in autofill UI/logic.
    virtual bool UsesPlatformAutofill() const = 0;

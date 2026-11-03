@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/ui/webui/history/browsing_history_handler.cc b/chrome/browser/ui/webui/history/browsing_history_handler.cc
-index 2ca7d2b90fec2fc8f2945769c65ba827ae819ad7..b3efd52a7f8dc3cba4d4f6c38dea0bd1987fc8d2 100644
+index fa2228c6b9ffd97eb68b4d870e15f85bef1a1407..3a380246f832d2e12bf06766348edfc418ee39aa 100644
 --- a/chrome/browser/ui/webui/history/browsing_history_handler.cc
 +++ b/chrome/browser/ui/webui/history/browsing_history_handler.cc
-@@ -728,6 +728,10 @@ void BrowsingHistoryHandler::IncrementHistoryPageHistorySyncPromoShownCount() {}
+@@ -727,6 +727,10 @@ void BrowsingHistoryHandler::IncrementHistoryPageHistorySyncPromoShownCount() {}
  #elif !BUILDFLAG(IS_CHROMEOS)
  void BrowsingHistoryHandler::ShouldShowHistoryPageHistorySyncPromo(
      ShouldShowHistoryPageHistorySyncPromoCallback callback) {

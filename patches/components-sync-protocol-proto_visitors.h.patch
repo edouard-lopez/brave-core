@@ -1,8 +1,8 @@
 diff --git a/components/sync/protocol/proto_visitors.h b/components/sync/protocol/proto_visitors.h
-index db77a64df58e6c8377652480875fb5a874ec36c9..8a4810a7c9dd61ed3a6162761763bfedaac4ff55 100644
+index 8e48368f7461e2b90b3d6f8d5b0bb394a63996e9..77aa406be208a040a30ab93e185741335a78601e 100644
 --- a/components/sync/protocol/proto_visitors.h
 +++ b/components/sync/protocol/proto_visitors.h
-@@ -624,6 +624,7 @@ VISIT_PROTO_FIELDS(const sync_pb::DeviceInfoSpecifics& proto) {
+@@ -623,6 +623,7 @@ VISIT_PROTO_FIELDS(const sync_pb::DeviceInfoSpecifics& proto) {
    VISIT(signin_scoped_device_id);
    VISIT(last_updated_timestamp);
    VISIT(feature_fields);
@@ -10,7 +10,7 @@ index db77a64df58e6c8377652480875fb5a874ec36c9..8a4810a7c9dd61ed3a6162761763bfed
    VISIT(sharing_fields);
    VISIT(model);
    VISIT(manufacturer);
-@@ -662,6 +663,7 @@ VISIT_PROTO_FIELDS(const sync_pb::FeatureSpecificFields& proto) {
+@@ -661,6 +662,7 @@ VISIT_PROTO_FIELDS(const sync_pb::FeatureSpecificFields& proto) {
    VISIT_REP(glic_experimental_triggering_capabilities);
  }
  

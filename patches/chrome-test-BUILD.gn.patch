@@ -1,5 +1,5 @@
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 7689d1612427e3793f228bb3763fbed0c5f719f3..4cfc2b0464cf08eaab2cbeb1007e58d0b50f4e4b 100644
+index 2403ec976aee264d3579877c4af0e92cbce7bf50..b03034edcd77b59138749473d4736431667c5b2f 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
 @@ -14,6 +14,7 @@
@@ -34,7 +34,7 @@ index 7689d1612427e3793f228bb3763fbed0c5f719f3..4cfc2b0464cf08eaab2cbeb1007e58d0
  
    if (enable_devtools_frontend) {
      deps += [ "//chrome/browser/ui/webui/devtools:unit_tests" ]
-@@ -3777,6 +3781,7 @@ if (!is_android && !is_chromeos_device) {
+@@ -3776,6 +3780,7 @@ if (!is_android && !is_chromeos_device) {
      ldflags = []
  
      deps = [

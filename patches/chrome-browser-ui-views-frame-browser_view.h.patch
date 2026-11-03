@@ -1,8 +1,8 @@
 diff --git a/chrome/browser/ui/views/frame/browser_view.h b/chrome/browser/ui/views/frame/browser_view.h
-index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82daa2acd12 100644
+index d16b82dda03a736c9c08dd0eca7aa91a06c1112f..b888e8421d8f29969915b9d3a6316acd15b13619 100644
 --- a/chrome/browser/ui/views/frame/browser_view.h
 +++ b/chrome/browser/ui/views/frame/browser_view.h
-@@ -132,7 +132,7 @@ class WebView;
+@@ -133,7 +133,7 @@ class WebView;
  //  A ClientView subclass that provides the contents of a browser window,
  //  including the TabStrip, toolbars, download shelves, the content area etc.
  //
@@ -11,7 +11,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
                      public TabStripModelObserver,
                      public ui::AcceleratorProvider,
                      public views::WidgetDelegate,
-@@ -203,7 +203,7 @@ class BrowserView : public BrowserWindow,
+@@ -204,7 +204,7 @@ class BrowserView : public BrowserWindow,
  
    // Returns information about elements that want to render in the top window
    // frame area.
@@ -20,7 +20,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Returns the preferred size of the Web App Frame Toolbar. Used for example
    // to determine the height of the title bar.
-@@ -321,7 +321,7 @@ class BrowserView : public BrowserWindow,
+@@ -323,7 +323,7 @@ class BrowserView : public BrowserWindow,
    TabSearchBubbleHost* GetTabSearchBubbleHost();
  
    // Setter for the BrowserView's TabSearchBubbleHost instance.
@@ -29,7 +29,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Accessor for the ExclusiveAccessBubble.
    ExclusiveAccessBubbleViews* GetExclusiveAccessBubble();
-@@ -331,7 +331,7 @@ class BrowserView : public BrowserWindow,
+@@ -333,7 +333,7 @@ class BrowserView : public BrowserWindow,
    GetExclusiveAccessBubbleViewsContextForTesting();
  
    // Returns true if the top UI are visible on screen.
@@ -38,7 +38,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Returns true if the top UI should be drawn.
    // On macOS, it is possible that the top UI is drawn but hidden.
-@@ -344,7 +344,7 @@ class BrowserView : public BrowserWindow,
+@@ -346,7 +346,7 @@ class BrowserView : public BrowserWindow,
    bool ShouldDrawWebAppFrameToolbar() const;
  
    // Returns whether or not strokes should be drawn around and under the tabs.
@@ -47,7 +47,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Returns whether the vertical tabstrip is collapsed.
    bool IsVerticalTabStripCollapsed() const;
-@@ -684,7 +684,7 @@ class BrowserView : public BrowserWindow,
+@@ -687,7 +687,7 @@ class BrowserView : public BrowserWindow,
    views::ClientView* CreateClientView(views::Widget* widget) override;
    std::unique_ptr<views::View> CreateOverlayView() override;
  #if BUILDFLAG(IS_MAC)
@@ -56,7 +56,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  #endif
    void OnWindowBeginUserBoundsChange() override;
    void OnWindowEndUserBoundsChange() override;
-@@ -834,6 +834,7 @@ class BrowserView : public BrowserWindow,
+@@ -837,6 +837,7 @@ class BrowserView : public BrowserWindow,
    void DeleteBrowserWindow() final;
  
   private:
@@ -64,7 +64,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
    // Do not friend BrowserViewLayout. Use the BrowserViewLayoutDelegate
    // interface to keep these two classes decoupled and testable.
    friend class BrowserViewLayoutDelegateImpl;
-@@ -864,11 +865,11 @@ class BrowserView : public BrowserWindow,
+@@ -868,11 +869,11 @@ class BrowserView : public BrowserWindow,
  
    // Display the current active split view as a series of multiple side-by-side
    // web contents.
@@ -78,7 +78,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Update the index of the active split based on the active tab's web
    // contents.
-@@ -927,12 +928,12 @@ class BrowserView : public BrowserWindow,
+@@ -931,12 +932,12 @@ class BrowserView : public BrowserWindow,
  
    // Prepare and update the split view for the specified WebContents. Returns
    // true if split view is updated and needs a layout.
@@ -93,7 +93,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Updates various optional child Views, e.g. Bookmarks Bar, Info Bar
    // in response to a change notification from the specified
-@@ -974,7 +975,7 @@ class BrowserView : public BrowserWindow,
+@@ -978,7 +979,7 @@ class BrowserView : public BrowserWindow,
  
    // Copy the accelerator table from the app resources into something we can
    // use.
@@ -102,7 +102,7 @@ index 750e46c97b64dccccf4268e912df5dbdb6516b3c..7d081135836c06af3223e2d90736c82d
  
    // Retrieves the command id for the specified Windows app command.
    int GetCommandIDForAppCommandID(int app_command_id) const;
-@@ -1004,7 +1005,7 @@ class BrowserView : public BrowserWindow,
+@@ -1008,7 +1009,7 @@ class BrowserView : public BrowserWindow,
    void ReparentTopContainerForStartOfImmersive();
  
    // Reparents |top_container_| to |main_container_|.
