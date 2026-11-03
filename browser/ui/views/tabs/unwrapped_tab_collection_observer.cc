@@ -10,20 +10,13 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <utility>
 #include <variant>
-#include <vector>
 
 #include "base/check.h"
-#include "base/functional/bind.h"
 #include "base/memory/raw_ptr.h"
-#include "base/memory/weak_ptr.h"
 #include "base/no_destructor.h"
-#include "base/task/sequenced_task_runner.h"
 #include "brave/browser/ui/views/tabs/tree_tab_view_utils.h"
-#include "brave/components/tabs/public/tree_tab_node_tab_collection.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
-#include "chrome/browser/ui/tabs/tab_strip_model_observer.h"
 #include "chrome/browser/ui/views/tabs/common/root_tab_collection_node.h"
 #include "chrome/browser/ui/views/tabs/common/tab_collection_node.h"
 #include "components/tabs/public/tab_collection.h"
@@ -127,17 +120,15 @@ tabs::TabCollectionHandle GetCollectionHandle(
 // Passes the changes of the collection hierarchy on to RootTabCollectionNode
 // with tree tab node collections unwrapped.
 //
-// Brave's tree tab collection delegate moves tree tab node collections without
-// any collection notification, which is reported by OnTreeTabChanged() only.
-// The tabs under them are placed once the update is done.
-class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
-                                       public TabStripModelObserver {
+// Brave's tree tab collection delegate notifies the changes of tree tab node
+// collections as it does for the other collections, so they are mirrored
+// without them.
+class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver {
  public:
   UnwrappedTabCollectionObserver(TabStripModel* model,
                                  RootTabCollectionNode* root_node)
       : tab_strip_model_(model), root_node_(root_node) {
     tab_strip_model_->Root()->AddObserver(this);
-    tab_strip_model_->AddObserver(this);
   }
   UnwrappedTabCollectionObserver(const UnwrappedTabCollectionObserver&) =
       delete;
@@ -200,28 +191,6 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
     if (const auto item = GetItemForHandle(node_data.handle)) {
       PlaceUnwrapped(*item);
     }
-  }
-
-  // TabStripModelObserver:
-  void OnTreeTabChanged(const TreeTabChange& change) override {
-    const std::vector<const tabs::TabInterface*> node_tabs =
-        GetTabsOfTreeTabChange(tab_strip_model_, change);
-    if ((change.type == TreeTabChange::kNodeCreated ||
-         change.type == TreeTabChange::kNodeReparented) &&
-        !node_tabs.empty()) {
-      // The tree tab node could have been moved along with its descendants.
-      if (const auto* tree_node_collection =
-              tabs::TreeTabNodeTabCollection::GetNearestTreeTabNodeCollection(
-                  node_tabs.front())) {
-        for (const tabs::TabInterface* tab :
-             tree_node_collection->GetTabsRecursive()) {
-          moved_tabs_.push_back(tab->GetHandle());
-        }
-      }
-    }
-
-    // The hierarchy is in the middle of the update.
-    ScheduleUpdate();
   }
 
  private:
@@ -370,49 +339,9 @@ class UnwrappedTabCollectionObserver : public tabs::TabCollectionObserver,
     }
   }
 
-  void ScheduleUpdate() {
-    if (update_pending_) {
-      return;
-    }
-    update_pending_ = true;
-    base::SequencedTaskRunner::GetCurrentDefault()->PostTask(
-        FROM_HERE, base::BindOnce(&UnwrappedTabCollectionObserver::Update,
-                                  weak_ptr_factory_.GetWeakPtr()));
-  }
-
-  void Update() {
-    update_pending_ = false;
-    auto moved_tabs = std::exchange(moved_tabs_, {});
-    if (!root_node_->view() || tab_strip_model_->closing_all()) {
-      return;
-    }
-
-    // Place them in tab strip model order, so that the item before each one is
-    // placed already.
-    std::vector<const tabs::TabInterface*> tabs;
-    for (const auto& handle : moved_tabs) {
-      const tabs::TabInterface* tab = handle.Get();
-      if (tab && IsInTabStrip(tab_strip_model_->Root(), TabOrCollection(tab))) {
-        tabs.push_back(tab);
-      }
-    }
-    std::ranges::sort(tabs, {}, [&](const tabs::TabInterface* tab) {
-      return tab_strip_model_->GetIndexOfTab(tab);
-    });
-    for (const tabs::TabInterface* tab : tabs) {
-      PlaceItem(TabOrCollection(tab));
-    }
-    if (!tabs.empty()) {
-      RemoveDetachedNodes(*root_node_);
-    }
-  }
-
   const raw_ptr<TabStripModel> tab_strip_model_;
   const raw_ptr<RootTabCollectionNode> root_node_;
   bool unwrapping_ = false;
-  std::vector<tabs::TabHandle> moved_tabs_;
-  bool update_pending_ = false;
-  base::WeakPtrFactory<UnwrappedTabCollectionObserver> weak_ptr_factory_{this};
 };
 
 std::map<RootTabCollectionNode*,

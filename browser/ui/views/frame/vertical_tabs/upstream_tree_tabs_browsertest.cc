@@ -4,10 +4,14 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <memory>
+#include <optional>
+#include <string>
 #include <variant>
+#include <vector>
 
 #include "base/command_line.h"
 #include "base/location.h"
+#include "base/strings/string_number_conversions.h"
 #include "base/test/run_until.h"
 #include "base/test/scoped_feature_list.h"
 #include "brave/browser/ui/tabs/brave_tab_prefs.h"
@@ -21,6 +25,8 @@
 #include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/tabs/features.h"
 #include "chrome/browser/ui/tabs/tab_enums.h"
+#include "chrome/browser/ui/tabs/split_tab_metrics.h"
+#include "chrome/browser/ui/tabs/tab_group_model.h"
 #include "chrome/browser/ui/tabs/tab_model.h"
 #include "chrome/browser/ui/tabs/vertical_tab_strip_state_controller.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
@@ -32,6 +38,10 @@
 #include "chrome/common/pref_names.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "components/prefs/pref_service.h"
+#include "components/split_tabs/split_tab_id.h"
+#include "components/split_tabs/split_tab_visual_data.h"
+#include "components/tab_groups/tab_group_id.h"
+#include "components/tabs/public/tab_group.h"
 #include "components/tabs/public/tab_collection.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/test/browser_test.h"
@@ -39,6 +49,7 @@
 #include "ui/base/page_transition_types.h"
 #include "ui/gfx/animation/animation.h"
 #include "ui/gfx/animation/animation_test_api.h"
+#include "ui/gfx/range/range.h"
 #include "ui/views/test/views_test_utils.h"
 #include "ui/views/view_utils.h"
 
@@ -133,11 +144,55 @@ class UpstreamTreeTabsBrowserTest : public InProcessBrowserTest {
     return true;
   }
 
+  // Describes a node handle as "tab<index>" or "collection<type>", for
+  // diagnostics.
+  std::string DescribeHandle(const tabs::TabCollectionNodeHandle& handle) {
+    if (const auto* tab_handle = std::get_if<tabs::TabHandle>(&handle)) {
+      const tabs::TabInterface* tab = tab_handle->Get();
+      return tab ? "tab" + base::NumberToString(model().GetIndexOfTab(tab))
+                 : "dead-tab";
+    }
+    const tabs::TabCollection* collection =
+        std::get<tabs::TabCollectionHandle>(handle).Get();
+    return collection ? "collection" +
+                            base::NumberToString(
+                                static_cast<int>(collection->type()))
+                      : "dead-collection";
+  }
+
+  // Describes the expected and the actual children of the unpinned node.
+  std::string DescribeViewModel() {
+    TabCollectionNode* unpinned =
+        root_node()->GetChildNodeOfType(TabCollectionNode::Type::UNPINNED);
+    if (!unpinned) {
+      return "no unpinned node";
+    }
+    const auto* collection =
+        std::get<tabs::ConstDanglingUntriagedTabCollection>(
+            unpinned->GetNodeData())
+            .get();
+    std::string result = "expected:";
+    for (const auto& child :
+         tree_tab_view_utils::GetUnwrappedChildren(*collection)) {
+      result += " " + DescribeHandle(std::visit(
+                          [](const auto& c) -> tabs::TabCollectionNodeHandle {
+                            return c->GetHandle();
+                          },
+                          child.get()));
+    }
+    result += " / actual:";
+    for (const auto& child : unpinned->children()) {
+      result += " " + DescribeHandle(child->GetHandle());
+    }
+    return result;
+  }
+
   void WaitForViewModelSynced(
       base::Location location = base::Location::Current()) {
     SCOPED_TRACE(location.ToString());
     ASSERT_TRUE(base::test::RunUntil([&]() { return IsViewModelSynced(); }))
-        << "The view model doesn't mirror the tab collection hierarchy.";
+        << "The view model doesn't mirror the tab collection hierarchy. "
+        << DescribeViewModel();
     LayoutNow();
   }
 
@@ -258,4 +313,89 @@ IN_PROC_BROWSER_TEST_F(UpstreamTreeTabsBrowserTest,
   ASSERT_TRUE(tab->GetGroup());
   model().RemoveFromGroup({model().GetIndexOfTab(tab)});
   WaitForViewModelSynced();
+}
+
+IN_PROC_BROWSER_TEST_F(UpstreamTreeTabsBrowserTest,
+                       ViewModelSyncedOnCloseTabs) {
+  CreateTree();
+
+  // Close a leaf.
+  model().CloseWebContentsAt(2, TabCloseTypes::CLOSE_NONE);
+  WaitForViewModelSynced();
+
+  // Close the last tab and then the root of a subtree.
+  model().CloseWebContentsAt(2, TabCloseTypes::CLOSE_NONE);
+  WaitForViewModelSynced();
+  model().CloseWebContentsAt(0, TabCloseTypes::CLOSE_NONE);
+  WaitForViewModelSynced();
+  EXPECT_EQ(1, model().count());
+}
+
+IN_PROC_BROWSER_TEST_F(UpstreamTreeTabsBrowserTest,
+                       ViewModelSyncedOnMoveSelectedSubtree) {
+  CreateTree();
+
+  // Move a parent together with its descendants, keeping the subtree.
+  model().ActivateTabAt(0);
+  model().ExtendSelectionTo(2);
+  model().MoveSelectedTabsTo(3, std::nullopt);
+  WaitForViewModelSynced();
+
+  // Move only a child out of the middle of the tree.
+  model().ActivateTabAt(1);
+  model().MoveSelectedTabsTo(0, std::nullopt);
+  WaitForViewModelSynced();
+}
+
+IN_PROC_BROWSER_TEST_F(UpstreamTreeTabsBrowserTest,
+                       ViewModelSyncedOnSplitAndUnsplit) {
+  CreateTree();
+
+  // Make a split of a parent and its child.
+  model().ActivateTabAt(1);
+  const split_tabs::SplitTabId split_id = model().AddToNewSplit(
+      {2}, split_tabs::SplitTabVisualData(),
+      split_tabs::SplitTabCreatedSource::kTabContextMenu);
+  WaitForViewModelSynced();
+
+  model().RemoveSplit(split_id);
+  WaitForViewModelSynced();
+
+  // Make a split of tabs in different trees.
+  model().ActivateTabAt(0);
+  model().AddToNewSplit({model().count() - 1}, split_tabs::SplitTabVisualData(),
+                        split_tabs::SplitTabCreatedSource::kTabContextMenu);
+  WaitForViewModelSynced();
+}
+
+IN_PROC_BROWSER_TEST_F(UpstreamTreeTabsBrowserTest,
+                       ViewModelSyncedOnGroupOperations) {
+  CreateTree();
+
+  // Group a tab that has descendants. The group is wrapped by a tree node.
+  const tab_groups::TabGroupId group = model().AddToNewGroup({0});
+  WaitForViewModelSynced();
+
+  // Add tabs to the existing group, from the tree and from outside of it.
+  model().AddToExistingGroup({2}, group);
+  WaitForViewModelSynced();
+  model().AddToExistingGroup({model().count() - 1}, group);
+  WaitForViewModelSynced();
+
+  model().MoveGroupTo(group, 1);
+  WaitForViewModelSynced();
+
+  // Empty the group. Its descendants are moved to the group's parent.
+  // The group is destroyed when it gets empty, so don't touch it after
+  // collecting the tabs.
+  std::vector<tabs::TabInterface*> tabs_in_group;
+  const gfx::Range range = model().group_model()->GetTabGroup(group)->ListTabs();
+  for (size_t i = range.start(); i < range.end(); ++i) {
+    tabs_in_group.push_back(model().GetTabAtIndex(static_cast<int>(i)));
+  }
+  ASSERT_FALSE(tabs_in_group.empty());
+  for (tabs::TabInterface* tab : tabs_in_group) {
+    model().RemoveFromGroup({model().GetIndexOfTab(tab)});
+    WaitForViewModelSynced();
+  }
 }

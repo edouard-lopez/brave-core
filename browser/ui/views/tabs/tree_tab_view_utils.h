@@ -12,13 +12,6 @@
 
 #include "components/tabs/public/tab_collection_types.h"
 
-class TabStripModel;
-struct TreeTabChange;
-
-namespace tabs {
-class TabInterface;
-}  // namespace tabs
-
 // Hooks for showing tree tabs in Chromium's tab strip views
 // (TabCollectionNode based, used by Chromium's vertical tabs). The chromium_src
 // overrides of those views forward-declare these instead of including this
@@ -51,11 +44,6 @@ std::optional<tabs::ConstChildPtr> GetUnwrappedPredecessor(
 // Returns true if |item| is in the hierarchy under |root|.
 bool IsInTabStrip(const tabs::TabCollection* root,
                   const tabs::ConstChildPtr& item);
-
-// Returns the tabs of the tree tab node that |change| is about.
-std::vector<const tabs::TabInterface*> GetTabsOfTreeTabChange(
-    TabStripModel* model,
-    const TreeTabChange& change);
 
 }  // namespace tree_tab_view_utils
 

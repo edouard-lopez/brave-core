@@ -11,10 +11,6 @@
 #include <optional>
 #include <variant>
 
-#include "brave/browser/ui/tabs/brave_tab_strip_model.h"
-#include "brave/browser/ui/tabs/tree_tab_model.h"
-#include "brave/components/tabs/public/tree_tab_node.h"
-#include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/tabs/public/tab_collection.h"
 #include "components/tabs/public/tab_interface.h"
 
@@ -154,19 +150,6 @@ bool IsInTabStrip(const tabs::TabCollection* root,
     }
   }
   return false;
-}
-
-std::vector<const tabs::TabInterface*> GetTabsOfTreeTabChange(
-    TabStripModel* model,
-    const TreeTabChange& change) {
-  if (change.type == TreeTabChange::kNodeWillBeDestroyed) {
-    return {};
-  }
-  TreeTabModel* tree_model =
-      static_cast<BraveTabStripModel*>(model)->tree_model();
-  const tabs::TreeTabNode* node =
-      tree_model ? tree_model->GetNode(change.id) : nullptr;
-  return node ? node->GetTabs() : std::vector<const tabs::TabInterface*>();
 }
 
 }  // namespace tree_tab_view_utils
