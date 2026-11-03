@@ -971,7 +971,11 @@ outdated: the one about empty lines in patches no longer matters, as plaster
 generates those patches, and Chromium's "forward declaration is no longer
 needed" counts uses in the shadow alone, not in the upstream header it includes
 (cr159: `confirm_infobar_creation_allowlist.h`, whose plaster adds qualified
-friends). List each warning left alone, and why, in the report.
+friends). For a `chromium_src` override of a generated file, it asks for
+`check_chromium_src.py`: run it as
+`PYTHONPATH=$PWD/script vpython3 tools/chromium_src/check_chromium_src.py Component`
+(without the path it fails on `brave_chromium_utils`), into a log. List each
+warning left alone, and why, in the report.
 
 Then run the build scripts' checks (`tsc`, `eslint` and `jest` over `build/`),
 with the JUnit report in the run directory rather than an untracked `junit.xml`:
