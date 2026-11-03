@@ -303,8 +303,13 @@ commit body and in the report. Then carry on. Examples from cr158:
 - Run `pnpm run format --base=HEAD` after editing Brave files, before committing
   them, tooling included (cr158: a `brockit_test.py` fixup failed the
   presubmit's format check). It formats only the changed lines of Brave files.
-  Revert anything it reformats outside the change, such as unrelated tracker
-  files.
+  Revert what it reformats in lines the base has, but keep its reflow of lines a
+  branch commit added: the presubmit formats against the base and flags them
+  (cr159: a tracker section from an earlier run).
+- In a `chromium_src` header that must include something before the upstream
+  header, put a comment line between the two includes: clang-format otherwise
+  sorts the `<upstream>` include first (cr159:
+  `permission_request_description.h` and `url/gurl.h`).
 
 ### Long commands
 
@@ -818,7 +823,10 @@ and later errors often only follow from it. Loop:
    Independent groups can be researched in parallel, by subagents that only
    research. Edits and commits stay in the main agent so they don't race.
 4. Commit each fix with its culprit, re-run `pnpm run format --base=HEAD` on
-   Brave files, and rebuild.
+   Brave files, and rebuild. For a changed upstream signature, `git grep` every
+   Brave caller first and fix them together: the build stops at the first
+   object, so each missed caller costs a round (cr159: `FilterToComponents()` in
+   two Traffic Control files).
 
 If a log ends with an error about `out/Component/build.guard`, two builds
 overlapped. Make sure only one runs.
@@ -828,6 +836,13 @@ command and flags, e.g. `--target=brave_unit_tests`,
 `--target=chrome/browser/resources/settings:lint_ts` or
 `--target=chrome/test/data/webui/tab_search:build_ts`. A full `brave:all` build
 is still what closes the step.
+
+A green build doesn't show a `chromium_src` `#define` whose target upstream
+removed: it just matches nothing. Once the build is green, run
+`vpython3 tools/cr/codehealth/scripts/define_reach.py <bump range>` and treat a
+token whose reach fell to 0 as a failure (cr159: `776b53ff6a48` dropped the
+`IsHistoryEmbeddingsFeatureEnabled()` gate that a shadow rewrote, so the
+embedding services were never built; only the code health review caught it).
 
 ### 4. Linux tests
 
@@ -871,6 +886,9 @@ Known environment-only failures, not lift regressions:
 - `BraveFontWhitelistTest.*` fails on Linux distros that `GetLinuxDistro()`
   doesn't recognise (e.g. Ubuntu 26.04).
 - Tests that pass on retry are flaky; report them, don't fix.
+- "Missing X server or $DISPLAY" at start-up, every test failing in `SetUp()`:
+  Xvfb wasn't up for that run (cr159: a browser test run chained after a unit
+  test run in one command). Rerun it in a command of its own.
 - An upstream test that checks behaviour Brave disables may already be in
   `test/filters/*.filter`. Check before investigating.
 
@@ -1321,6 +1339,15 @@ experimental; upstream did the same in `2b00348df18d`.)
   the old method name compiles nothing and silently drops Brave's hook (here,
   the crash report permission dialog). Re-route with a plaster at the call site,
   and declare the Brave wrapper in the `chromium_src` header.
+- **Upstream deletes machinery a Brave feature relies on**, as the last user of
+  a generic hook goes (cr159: `8d2d444db76c` removed
+  `PermissionRequestDescription::requesting_origin` and
+  `GetPermissionResultForEmbeddedRequester()` with `TOP_LEVEL_STORAGE_ACCESS`;
+  Brave Wallet keys account permissions on them). Read why Brave used it before
+  dropping the call: here a grant would have covered every account. Restore only
+  what Brave calls, as a defaulted virtual on the interface so the other
+  delegates need nothing, implemented by the one class Brave reaches, and run
+  the feature's browser tests. It is a `--tagged=WIP` decision.
 - **Brave appends to an upstream enum after `kMaxValue`** (`DownloadCommands`):
   when upstream adds a value, renumber Brave's values past it and update the
   `static_assert`. Check first that Brave's values aren't persisted or recorded
